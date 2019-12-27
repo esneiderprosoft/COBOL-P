@@ -33,7 +33,7 @@
        COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
        COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC19.CBL".
 
-       77 ULT-NRO-W                    PIC 9(9).
+       77 ULT-NRO-W                   PIC 9(9).
 
        01 SECU-EDIT.
           02 SEC1-EDIT                 PIC 9.
