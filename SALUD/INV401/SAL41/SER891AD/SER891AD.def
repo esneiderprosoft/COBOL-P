@@ -1,0 +1,7 @@
+LIBRARY SER891AD
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,7 @@
+LIBRARY SER108DA
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

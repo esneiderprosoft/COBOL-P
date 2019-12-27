@@ -1,0 +1,7 @@
+LIBRARY LISTGENERAR-FACT
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

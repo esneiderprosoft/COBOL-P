@@ -1,0 +1,7 @@
+LIBRARY CONFIRMAR-CITA-HC
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,7 @@
+LIBRARY HC836A
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

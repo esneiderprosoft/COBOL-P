@@ -1,0 +1,7 @@
+LIBRARY HC-01_R
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

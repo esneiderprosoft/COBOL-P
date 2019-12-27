@@ -1,0 +1,7 @@
+LIBRARY HC-NTAS003
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

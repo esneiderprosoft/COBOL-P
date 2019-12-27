@@ -1,0 +1,581 @@
+004820*=================================================================
+004830* CREA JSON DE CONSULTA DE DATOS POR PACIENTE HC.
+004840*=================================================================
+004850 IDENTIFICATION DIVISION.
+004860 PROGRAM-ID. "HttpExtensionProc".
+004870 ENVIRONMENT DIVISION.
+004880 CONFIGURATION SECTION.
+004890 INPUT-OUTPUT SECTION.
+004900 FILE-CONTROL.
+004910     COPY "P:\PROG\PROYECT\FUENTES\FS-USUNET.CBL".
+004920     COPY "P:\PROG\PROYECT\FUENTES\FS-SESION.CBL".
+
+           SELECT ARCHIVO-USUARIOS
+                  ASSIGN NOM-USUAR-W
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC;
+                  RECORD KEY IS NOMBRE-USU 
+                  ALTERNATE RECORD KEY IS		
+                  CLAVE-USU WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS
+                  CTL-USU WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS
+                  CLAVE-2-USU WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+
+           SELECT HISTORIA-DETALLADA LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-HCDET-W
+                  ORGANIZATION INDEXED;
+                  ACCESS MODE DYNAMIC;
+                  RECORD KEY IS LLAVE-DETHC
+                  ALTERNATE RECORD KEY IS LLAVE-FOLIO-DETHC
+                  WITH DUPLICATES
+                  FILE STATUS OTR-STAT.
+
+           SELECT ARCHIVO-PACIENTES
+                  ASSIGN  NOM-PACIE-W
+                  ORGANIZATION IS INDEXED;
+                  ACCESS MODE  IS DYNAMIC
+                  RECORD KEY   IS COD-PACI
+                  ALTERNATE RECORD KEY  
+                  DESCRIP-PACI WITH DUPLICATES
+                  ALTERNATE RECORD KEY  
+                  EPS-PACI  WITH DUPLICATES
+                  ALTERNATE RECORD KEY  
+                  ID-COTIZ-PACI WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+           SELECT ARCHIVO-JSON
+                  ASSIGN NOMBRE-JSON-W
+                  ORGANIZATION IS LINE SEQUENTIAL
+                  FILE STATUS IS OTR-STAT.
+
+005070
+005080 DATA DIVISION.
+005090 FILE SECTION.
+       COPY "P:\PROG\PROYECT\FUENTES\FD-USUNET.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-SESION.CBL".
+       COPY "S:\NEWCOBOL\FUENTES\FD-USUAR.CBL".
+       COPY "S:\NEWCOBOL\FUENTES\FD-HCDETAL17.CBL".
+       COPY "S:\NEWCOBOL\FUENTES\FD-PACIE.CBL".
+.
+       FD  ARCHIVO-JSON
+           LABEL RECORD STANDARD.
+       01  REG-PLANO.
+           02 DATOS-PLANO   PIC X(20000).
+
+005190 WORKING-STORAGE SECTION.
+005200 COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
+005210 COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC.CBL".
+005210 COPY "P:\PROG\PROYECT\FUENTES\WS-9005.CBL".
+005210 COPY "P:\PROG\PROYECT\FUENTES\WS-9006.CBL".
+005220 COPY "P:\PROG\PROYECT\FUENTES\WS-9009.CBL".
+       77 NOM-USUAR-W                PIC X(70).
+       77 NOM-HCDET-W                PIC X(70).
+       77 NOM-PACIE-W                PIC X(70).
+       77 NOM-PLANO-W                PIC X(90).
+       77 CONT                       PIC 99.
+       77 OPER-W                     PIC X(4).
+       77 SUCURSAL-W                 PIC X.
+       77 SW-PYP                     PIC 999.
+       77 SW-BLANCA                  PIC 999.
+       77 SW-OPEN                    PIC 9.
+       77 SW-INVALID-JSON            PIC XX.
+       77 SW-INVALID-DETALLE         PIC XX.
+       77 SW-FOLIO                   PIC XX.
+
+       01 ULT-FECHA-NUM.
+          02 ULT-ANO-NUM             PIC 99.
+          02 ULT-MES-NUM             PIC 99.
+          02 ULT-DIA-NUM             PIC 99.
+
+       01 FECHA-SIG-ACT-W.
+          02 SIG-ACT-W         PIC 99.
+          02 FECHA-ACT-W.
+             03 ANO-ACT-W      PIC 99.
+             03 MES-ACT-W      PIC 99.
+             03 DIA-ACT-W      PIC 99.
+
+       01 ID-EDIT.
+          02 ID1-EDIT                PIC X(14).
+          02 ID2-EDIT                PIC X.
+
+       01 LINEA-LLEGAD-W             PIC X(200).
+
+005270 01 DATO-LLEGADA-W.
+          02 SESION-LLEGAD-W.
+005280       03 ID-LLEGAD-W         PIC X(15).
+             03 FECHA-LLEGAD-W      PIC X(8).
+             03 HORA-LLEGAD-W       PIC X(6).
+          02 LLAVE-HC-W             PIC X(23).
+          02 SW-DETALLE             PIC XX.
+          02 TABLA-W.
+             03 TABLA-COD    OCCURS 25.
+                05 COD-DETCH-W      PIC X(4).
+                05 FILLER           PIC X.
+
+       01 DATOS-ENVIO.
+          02 DAT0-ENV                PIC XX.
+          02 FILLER                  PIC X VALUE "|".
+          02 DAT1-ENV                PIC XX.
+          02 FILLER                  PIC X VALUE "|".
+          02 DAT2-ENV                PIC XX.
+          02 FILLER                  PIC X VALUE "|".
+          02 DAT3-ENV                PIC X(34).
+
+
+
+       01 DATO-9005-W.
+          02 VALORACION-9005-W   PIC X.
+          02 FILLER              PIC X VALUE "$".
+          02 REVALORACION-9005-W PIC X.
+          02 FILLER              PIC X VALUE "$".
+          02 COMER-9005-W        PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 LAVARSE-9005-W      PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 VESTIRSE-9005-W     PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 ARREGLARSE-9005-W   PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 DEPOSICION-9005-W   PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 MICCION-9005-W      PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 BANO-9005-W         PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 TRASLADARSE-9005-W  PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 DEAMBULACION-9005-W PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 ESCALERAS-9005-W    PIC 9.
+          02 FILLER              PIC X VALUE "$".
+          02 NIVEL-SECUELAS-9005-W PIC X(50).
+          02 FILLER              PIC X VALUE "$".
+	  02 TABLA-ACTIVIDADES-9005-W.
+             03 AYUDA-ACTIVIDADES-9005-W OCCURS 5 PIC X(95).
+          02 FILLER              PIC X VALUE "$".
+          02 DEPEN-FUNCIONAL-9005-W  PIC X(50).
+          02 FILLER              PIC X VALUE "$".
+
+
+       01 DATO-9006-W.
+          02 VALORACION-9006-W       PIC X.
+          02 FILLER                  PIC X VALUE "$".
+          02 REVALORACION-9006-W     PIC X.
+          02 FILLER                  PIC X VALUE "$".
+          02 CATEGORIA-9006-W        PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 ACTIVIDAD-NORMAL-9006-W PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 INCAPAZ-TRABAJAR-9006-W PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 INCAPAZ-CUIDARSE-9006-W PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+
+       01 DATO-9009-W.
+          02 CLASIF-HERI-9009-W      PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 DIMENSION-HERI-9009-W   PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 PROFUN-TEJID-9009-W     PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 COMORBILIDAD-9009-W     PIC X.
+          02 FILLER                  PIC X VALUE "$".
+          02 ESTADIO-HERI-9009-W     PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+          02 INFECCION-9009-W        PIC X.
+          02 FILLER                  PIC X VALUE "$".
+          02 TIEMPO-EVOLU-9009-W     PIC X.
+          02 FILLER                  PIC X VALUE "$".
+          02 REGISTRO-FOTO-9009-W    PIC 9.
+          02 FILLER                  PIC X VALUE "$".
+
+
+       01 LIN-01.
+          02 FILLER                  PIC X(12)  VALUE "{*LLAVE-HC*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 LLAVE-HC-DETHC-J        PIC X(23).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(12)  VALUE "*COD-DETHC*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 COD-DETHC-J             PIC X(4).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(10)  VALUE "*DETALLE*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 DATOS-DETHC-J           PIC X(19000).
+          02 FILLER                  PIC XX     VALUE "*}".
+          02 CIERRE-LIN-01           PIC X.
+
+006310 LINKAGE SECTION.
+006320 COPY "P:\PROG\PROYECT\FUENTES\ISAPICTX.CBL".
+006330 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+006340
+006350 DECLARATIVES.
+006360 I-O-TEST SECTION.
+006370     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+006380 ESCR-EXCEPTIONES.
+006390     IF OTR-STAT = "00"
+006400        CONTINUE 
+006410     ELSE
+006420        MOVE OTR-STAT         TO MSJ1-HTML
+006430        MOVE NOM-USU-W        TO MSJ2-HTML
+006440        MOVE "HC811"          TO MSJ3-HTML
+006450        GO TO ENVIAR2-ERROR
+006460     END-IF.
+006470
+006480 I-O-TEST SECTION.
+006490     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.
+006500 ESCR-EXCEPTIONES.
+006510     IF OTR-STAT = "00" 
+006520        CONTINUE 
+006530     ELSE
+006540        MOVE OTR-STAT         TO MSJ1-HTML
+006550        MOVE NOM-SESION-W     TO MSJ2-HTML
+006560        MOVE "HC811"          TO MSJ3-HTML
+006570        GO TO ENVIAR2-ERROR
+006580     END-IF.
+006590  
+
+006480 I-O-TEST SECTION.
+006490     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUARIOS.
+006500 ESCR-EXCEPTIONES.
+006510     IF OTR-STAT = "00" 
+006520        CONTINUE 
+006530     ELSE
+006540        MOVE OTR-STAT         TO MSJ1-HTML
+006550        MOVE NOM-USUAR-W      TO MSJ2-HTML
+006560        MOVE "HC811"          TO MSJ3-HTML
+006570        GO TO ENVIAR2-ERROR
+006580     END-IF.
+006590  
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON HISTORIA-DETALLADA.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00"
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-HCDET-W      TO MSJ2-HTML
+006680        MOVE "HC811"          TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR  
+006700     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-PACIENTES.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00" 
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-PACIE-W      TO MSJ2-HTML
+006680        MOVE "HC811"          TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+       I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-JSON.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00" OR "35"
+006640        CONTINUE                                                                                      
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOMBRE-JSON-W    TO MSJ2-HTML
+006680        MOVE "HC002"          TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+006710
+006720  END DECLARATIVES.
+006730
+006740 INICIAR-IIS.
+006750     MOVE LOW-VALUE TO COBW3.
+006760     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+006770     CALL "COBW3_INIT" USING COBW3.
+006780
+006790 LEER-DATO-HTML.
+006800     MOVE "datosh" TO COBW3-SEARCH-DATA.
+006810     CALL "COBW3_GET_VALUE" USING COBW3.
+006820     MOVE COBW3-GET-DATA    TO LINEA-LLEGAD-W.
+
+           INITIALIZE DATO-LLEGADA-W
+           UNSTRING LINEA-LLEGAD-W DELIMITED BY "|"
+              INTO SESION-LLEGAD-W, LLAVE-HC-W, OPER-JSON-W, SW-DETALLE, SW-FOLIO, TABLA-W
+           END-UNSTRING.
+
+           MOVE LLAVE-HC-W         TO ID-EDIT
+001855     MOVE SESION-LLEGAD-W    TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL FECHA-JSON-W.
+
+           MOVE FUNCTION CURRENT-DATE TO FECHA-JSON-W.
+           ACCEPT HORA-TOTAL FROM TIME.
+           ACCEPT HORA-JSON-W FROM TIME.
+
+000797 INICIAR-SESION.
+000806     MOVE "D:\WEB\HC-NTAS-EVOL\DATOS\SC-SESION.DAT" TO NOM-SESION-W
+000810     GO TO VALIDAR-SESION.
+000850
+000860 FIN-VALIDAR-SESION.
+006840
+006900 ABRIR-USUARIO.
+006910     INITIALIZE OTR-STAT.
+006920     MOVE "D:\WEB\HC-NTAS-EVOL\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+006930
+006940     OPEN INPUT ARCHIVO-USUNET
+006950     EVALUATE OTR-STAT
+006960       WHEN "00"  CONTINUE
+006970       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+006980                  INITIALIZE REG-USUNET
+006990                  WRITE REG-USUNET
+007000                  CLOSE ARCHIVO-USUNET
+007010                  MOVE "Validacion de Usuario"       TO MSJ1-HTML
+007020                  MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007030                  MOVE "Sc"                          TO MSJ3-HTML
+007040                  GO TO ENVIAR2-ERROR
+007050       WHEN OTHER GO TO CERRAR-SESION
+007060     END-EVALUATE.
+007070
+007080     INITIALIZE LLAVE-USUNET.
+007100
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007130
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+007210     IF NOMBRE-USUNET = SPACES
+007220     OR NIT-USUNET = ZEROS
+007230        MOVE "Validacion de Sesion"        TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007250        MOVE "Sc"                          TO MSJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+007280 
+007350
+       ASIGNAR-NOMBRES.
+           ACCEPT ULT-FECHA-NUM FROM DATE.
+           MOVE ULT-FECHA-NUM TO FECHA-ACT-W
+           INITIALIZE NOM-USUAR-W NOM-PLANO-W
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+           MOVE "\\" TO NOM-USUAR-W NOM-HCDET-W
+
+           INSPECT NOM-USUAR-W REPLACING FIRST "                    "
+                                            BY IP-DATOS-USUNET
+
+           INSPECT NOM-USUAR-W REPLACING FIRST " "
+                                            BY "\"
+
+           INSPECT NOM-USUAR-W REPLACING FIRST "                              "
+                                            BY DIRECTORIO-USUNET
+
+           MOVE NOM-USUAR-W TO NOM-PACIE-W 
+
+           INSPECT NOM-USUAR-W REPLACING FIRST  "                "
+                                            BY  "\CONTROL\ARCHUSU".
+
+           INSPECT NOM-PACIE-W REPLACING FIRST  "                     "
+                                           BY   "\CONTROL\SC-PACIE.DAT".
+
+
+           INSPECT NOM-HCDET-W  REPLACING FIRST "                    "
+                                             BY IP-DATOS-USUNET
+
+           INSPECT NOM-HCDET-W REPLACING FIRST " "
+                                            BY "\"
+
+           INSPECT NOM-HCDET-W REPLACING FIRST "                                 "
+                                            BY "NEWCOBOL\HC\DATOS\SC-HCDETA-X.S17"
+
+           INSPECT NOM-HCDET-W REPLACING FIRST "X" BY ID2-EDIT.
+
+
+
+       LEER-USUARIO.
+
+           OPEN INPUT ARCHIVO-USUARIOS
+           READ ARCHIVO-USUARIOS NEXT WITH NO LOCK AT END 
+                CLOSE ARCHIVO-USUARIOS
+           END-READ.
+
+       LEER-PACIENTE.
+           OPEN INPUT ARCHIVO-PACIENTES.
+           MOVE LLAVE-HC-W    TO  COD-PACI.
+           READ ARCHIVO-PACIENTES WITH NO LOCK
+                INVALID KEY
+                        MOVE "99"         TO MSJ1-HTML
+                        MOVE "Paciente no existe" To MSJ2-HTML
+                        MOVE "HC-01"      TO MSJ3-HTML
+                        GO TO ENVIAR2-ERROR
+           END-READ.
+           CLOSE ARCHIVO-PACIENTES.
+
+       BUSCAR-DETALLE.
+           OPEN INPUT HISTORIA-DETALLADA.
+           MOVE LLAVE-HC-W   TO LLAVE-DETHC
+
+           MOVE "99"  TO SW-INVALID-DETALLE
+           START HISTORIA-DETALLADA KEY = LLAVE-HC-DETHC
+                INVALID KEY
+                        MOVE "99"  TO SW-INVALID-JSON
+                        GO TO CERRAR-DETALLE
+           END-START.
+
+           OPEN OUTPUT ARCHIVO-JSON
+           INITIALIZE REG-PLANO CONT SW-INVALID-JSON
+           MOVE "{*DETHC*:["   TO DATOS-PLANO
+           INSPECT DATOS-PLANO REPLACING ALL "*" BY CARAC-COMILLA
+           WRITE REG-PLANO END-WRITE.
+
+       LEER-DETALLE.
+           READ HISTORIA-DETALLADA NEXT WITH NO LOCK AT END GO TO CERRAR-PLANO.
+
+           IF ID-DETHC = ID-EDIT
+              CONTINUE
+           ELSE
+              GO TO CERRAR-PLANO
+           END-IF
+
+           IF SW-FOLIO = "**"
+              CONTINUE
+           ELSE
+              IF LLAVE-HC-W = LLAVE-HC-DETHC
+                 CONTINUE
+              ELSE
+                 GO TO LEER-DETALLE
+              END-IF
+           END-IF
+
+
+           INITIALIZE SW-OPEN I
+
+           IF SW-DETALLE = "**"
+              MOVE 1 TO SW-OPEN
+           ELSE
+              PERFORM VALIDAR-COD-DETHC VARYING I FROM 1 BY 1
+                                                UNTIL   I > 25
+           END-IF
+
+           IF SW-OPEN = 1
+              CONTINUE
+           ELSE
+              GO TO LEER-DETALLE
+           END-IF
+
+           EVALUATE COD-DETHC
+               WHEN 9005 PERFORM LLENAR-DETALLE-9005
+               WHEN 9006 PERFORM LLENAR-DETALLE-9006
+               WHEN 9009 PERFORM LLENAR-DETALLE-9009
+           END-EVALUATE.
+
+           MOVE "00"              TO SW-INVALID-DETALLE
+
+           MOVE LLAVE-HC-DETHC    TO LLAVE-HC-DETHC-J
+           MOVE COD-DETHC         TO COD-DETHC-J
+
+           MOVE DATOS-DETHC    TO DATOS-DETHC-J
+           INSPECT DATOS-DETHC-J REPLACING ALL "*" BY "x"
+           INSPECT DATOS-DETHC-J REPLACING ALL LOW-VALUES BY SPACES
+
+           INSPECT LIN-01  REPLACING ALL "*" BY CARAC-COMILLA
+           MOVE ","        TO CIERRE-LIN-01
+           MOVE LIN-01     TO DATOS-PLANO
+           WRITE REG-PLANO END-WRITE
+           GO TO LEER-DETALLE.
+
+       CERRAR-PLANO.
+           INITIALIZE LLAVE-HC-DETHC-J COD-DETHC-J DATOS-DETHC-J CIERRE-LIN-01
+           INSPECT LIN-01  REPLACING ALL "*" BY CARAC-COMILLA
+
+           MOVE LIN-01     TO DATOS-PLANO
+           WRITE REG-PLANO END-WRITE
+
+           MOVE "]}"       TO DATOS-PLANO
+           WRITE REG-PLANO END-WRITE
+
+           CLOSE ARCHIVO-JSON.
+
+       CERRAR-DETALLE.
+           CLOSE HISTORIA-DETALLADA
+
+           MOVE 00                   TO DAT0-ENV
+           MOVE SW-INVALID-JSON      TO DAT1-ENV
+           MOVE SW-INVALID-DETALLE   TO DAT2-ENV
+           MOVE NOM-JSON-W           TO DAT3-ENV.
+
+010700 PAGINA-CONFIG.
+
+010720     MOVE "datosrecibidos"  TO COBW3-CNV-NAME
+010730     MOVE DATOS-ENVIO       TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV"   USING COBW3
+010750
+010760     MOVE "..\PAGINAS\RECIBIDOS.ASPX" TO SALIDA-HTML  
+010770     PERFORM ABRIR-HTML.
+007980   
+007990 CERRAR-SESION.
+008000     CALL "COBW3_FREE" USING COBW3.
+008010     MOVE 1 TO PROGRAM-STATUS.
+008020     EXIT PROGRAM.
+
+
+       LLENAR-DETALLE-9005.
+           MOVE DATOS-DETHC   TO DATO-9005
+
+           MOVE VALORACION-9005     TO VALORACION-9005-W
+           MOVE REVALORACION-9005   TO REVALORACION-9005-W
+           MOVE COMER-9005          TO COMER-9005-W
+           MOVE LAVARSE-9005        TO LAVARSE-9005-W
+           MOVE VESTIRSE-9005       TO VESTIRSE-9005-W
+           MOVE ARREGLARSE-9005     TO ARREGLARSE-9005-W
+           MOVE DEPOSICION-9005     TO DEPOSICION-9005-W 
+           MOVE MICCION-9005        TO MICCION-9005-W 
+           MOVE BANO-9005           TO BANO-9005-W 
+           MOVE TRASLADARSE-9005    TO TRASLADARSE-9005-W
+           MOVE DEAMBULACION-9005   TO DEAMBULACION-9005-W
+           MOVE ESCALERAS-9005      TO ESCALERAS-9005-W
+
+           MOVE NIVEL-SECUELAS-9005      TO NIVEL-SECUELAS-9005-W
+           MOVE TABLA-ACTIVIDADES-9005   TO TABLA-ACTIVIDADES-9005-W
+           MOVE DEPEN-FUNCIONAL-9005     TO DEPEN-FUNCIONAL-9005-W
+
+
+           MOVE DATO-9005-W   TO DATOS-DETHC.
+
+       LLENAR-DETALLE-9006.
+
+           MOVE DATOS-DETHC   TO DATO-9005
+
+           MOVE VALORACION-9006        TO VALORACION-9006-W
+           MOVE REVALORACION-9006      TO REVALORACION-9006-W 
+           MOVE CATEGORIA-9006         TO CATEGORIA-9006-W 
+           MOVE ACTIVIDAD-NORMAL-9006  TO ACTIVIDAD-NORMAL-9006-W
+           MOVE INCAPAZ-TRABAJAR-9006  TO INCAPAZ-TRABAJAR-9006-W
+           MOVE INCAPAZ-CUIDARSE-9006  TO INCAPAZ-CUIDARSE-9006-W
+
+
+           MOVE DATO-9005-W    TO DATOS-DETHC.
+
+
+       LLENAR-DETALLE-9009.
+
+           MOVE DATOS-DETHC   TO DATO-9009
+
+           MOVE CLASIF-HERI-9009      TO CLASIF-HERI-9009-W
+           MOVE DIMENSION-HERI-9009   TO DIMENSION-HERI-9009-W
+           MOVE PROFUN-TEJID-9009     TO PROFUN-TEJID-9009-W
+           MOVE COMORBILIDAD-9009     TO COMORBILIDAD-9009-W
+           MOVE ESTADIO-HERI-9009     TO ESTADIO-HERI-9009-W
+           MOVE INFECCION-9009        TO INFECCION-9009-W
+           MOVE TIEMPO-EVOLU-9009     TO TIEMPO-EVOLU-9009-W
+           MOVE REGISTRO-FOTO-9009    TO REGISTRO-FOTO-9009-W
+
+
+           MOVE DATO-9009-W  TO DATOS-DETHC.
+
+       VALIDAR-COD-DETHC.
+
+           IF COD-DETCH-W (I) = COD-DETHC
+              MOVE 1 TO SW-OPEN
+           END-IF.
+
+008040 COPY "P:\PROG\PROYECT\FUENTES\SC-WEB.CBL".
+

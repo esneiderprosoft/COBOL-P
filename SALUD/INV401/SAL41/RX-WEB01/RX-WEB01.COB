@@ -1,0 +1,254 @@
+004820*=================================================================
+004830*   SALUD - MONTA LECTURAS DE RX EN ARCHIVO WEB
+004840*=================================================================
+004850 IDENTIFICATION DIVISION.
+004860 PROGRAM-ID. "HttpExtensionProc".
+004870 ENVIRONMENT DIVISION.
+004880 CONFIGURATION SECTION.
+004890 INPUT-OUTPUT SECTION.
+004900 FILE-CONTROL.
+004910     COPY "..\..\FUENTES\FS-USUNET.CBL".
+004920     COPY "..\..\FUENTES\FS-SESION.CBL".
+           COPY "..\..\FUENTES\FS-RESRX.CBL".
+
+            SELECT  ARCHIVO-FIRMA LOCK MODE IS AUTOMATIC
+                    ASSIGN TO NOM-FIR-W
+                    ORGANIZATION IS SEQUENTIAL
+                    FILE STATUS OTR-STAT.
+
+005070 DATA DIVISION.
+005090 FILE SECTION.
+005100 COPY "..\..\FUENTES\FD-USUNET.CBL".
+005110 COPY "..\..\FUENTES\FD-SESION.CBL".
+       COPY "..\..\FUENTES\FD-RESRX.CBL".
+       COPY "..\..\FUENTES\FD-FIRM1.CBL".
+
+005190 WORKING-STORAGE SECTION.
+005200 COPY "..\..\FUENTES\COBW3.CBL".
+005210 COPY "..\..\FUENTES\WEB-CARAC.CBL".
+
+       01 LINEA-LLEGADA-W               PIC X(100).
+
+       01 DATO-LLEGADA-W.
+          02 SESION-LLEGAD-W.
+             03 ID-LLEGAD-W             PIC X(15).
+             03 FECHA-LLEGAD-W          PIC X(8).
+             03 HORA-LLEGAD-W           PIC X(6).
+          02 DIRECTORIO-LLEGAD-W        PIC X(30).
+          02 CARPTA-LLEGAD-W            PIC X(5).
+
+       77 NOM-FIR-W                     PIC X(100).
+       77  NOM-RES-RX                   PIC X(100).
+
+       01 FECHA-LLEGAD                  PIC 9(8).
+       01 LLAVE-LLEGAD                  PIC X(19).
+       01 CTA-LLEGAD                    PIC X(7).
+       01 ID-LLEGAD                     PIC X(15).
+       01 DESCRIP-PACI-LLEGAD           PIC X(56).
+       01 GRUPO-LLEGAD                  PIC X(2).
+       01 CODART-LLEGAD                 PIC X(13).
+       01 DESCRIP-CUP-LLEGAD            PIC X(60).
+       01 MEDAYU-LLEGAD                 PIC 9(10).
+       01 DESCRIP-PROF-LLEGAD           PIC X(30).
+       01 REG-MED-LLEGAD                PIC X(10).
+       01 BIRADS-LLEGAD                 PIC X.
+       01 EDAD-LLEGAD                   PIC X(4).
+       01 SEXO-LLEGAD                   PIC X.
+       01 BLOQUE-LLEGAD                 PIC X.
+       01 EMAIL-LLEGAD                  PIC X(60).
+
+       01 DATOS-ENVIO.
+          02 SW-INVALID-ENV             PIC XX.
+
+006310 LINKAGE SECTION.
+006320 COPY "..\..\FUENTES\ISAPICTX.CBL".
+006330 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+006340
+006350 DECLARATIVES.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE 
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-USU-W                TO MSJ2-HTML
+              MOVE "RX-WEB01"               TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-SESION-W             TO MSJ2-HTML
+              MOVE "RX-WEB01"               TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON RESULTADOS-RX.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-RES-RX               TO MSJ2-HTML
+              MOVE "RX-WEB01"               TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.      
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-FIRMA.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-FIR-W                TO MSJ2-HTML
+              MOVE "RX-WEB01"               TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+006720  END DECLARATIVES.
+006730
+006740 INICIAR-IIS.
+006750     MOVE LOW-VALUE TO COBW3.
+006760     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+006770     CALL "COBW3_INIT" USING COBW3.
+006780
+006790 LEER-DATO-HTML.
+006800     MOVE "datosh" TO COBW3-SEARCH-DATA.
+006810     CALL "COBW3_GET_VALUE" USING COBW3.
+006820     MOVE COBW3-GET-DATA    TO LINEA-LLEGADA-W.
+
+           UNSTRING LINEA-LLEGADA-W DELIMITED BY "|"
+               INTO SESION-LLEGAD-W, DIRECTORIO-LLEGAD-W, CARPTA-LLEGAD-W, FECHA-LLEGAD,
+                    LLAVE-LLEGAD, CTA-LLEGAD, ID-LLEGAD, DESCRIP-PACI-LLEGAD, GRUPO-LLEGAD,
+                    CODART-LLEGAD, DESCRIP-CUP-LLEGAD, MEDAYU-LLEGAD, DESCRIP-PROF-LLEGAD,
+                    REG-MED-LLEGAD, BIRADS-LLEGAD, EDAD-LLEGAD, SEXO-LLEGAD, BLOQUE-LLEGAD,
+                    EMAIL-LLEGAD
+           END-UNSTRING.
+
+001855     MOVE SESION-LLEGAD-W        TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE  TO FECHA-TOTAL.
+
+000797 INICIAR-SESION.
+000806     MOVE "D:\progelect\DATOS\SC-SESION.DAT" TO NOM-SESION-W
+000810     GO TO VALIDAR-SESION.
+000850
+000860 FIN-VALIDAR-SESION.
+006840
+006900 ABRIR-USUARIO.
+006910     INITIALIZE OTR-STAT.
+006920     MOVE "D:\progelect\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+006930
+006940     OPEN INPUT ARCHIVO-USUNET
+006950     EVALUATE OTR-STAT
+006960       WHEN "00"  CONTINUE
+006970       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+006980                  INITIALIZE REG-USUNET
+006990                  WRITE REG-USUNET
+007000                  CLOSE ARCHIVO-USUNET
+007010                  MOVE "Validacion de Usuario"       TO MSJ1-HTML
+007020                  MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007030                  MOVE "Sc"                          TO MSJ3-HTML
+007040                  GO TO ENVIAR2-ERROR
+007050       WHEN OTHER GO TO CERRAR-SESION
+007060     END-EVALUATE.
+007070
+007080     INITIALIZE LLAVE-USUNET.
+
+007100
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+007210     IF NOMBRE-USUNET = SPACES
+007230        MOVE "Validacion de Sesion"        TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007250        MOVE "Sc"                          TO MsJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+007280 
+007350
+
+       ASIGNAR-NOMBRES.           
+            INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+            
+            INITIALIZE NOM-RES-RX
+
+            MOVE "\\" TO NOM-RES-RX
+
+            INSPECT NOM-RES-RX REPLACING FIRST "                    "
+                                            BY IP-DATOS-USUNET
+
+            INSPECT NOM-RES-RX REPLACING FIRST " "
+                                            BY "\"
+
+            MOVE NOM-RES-RX TO NOM-FIR-W
+
+            INSPECT NOM-FIR-W REPLACING FIRST "                              "
+                                           BY DIRECTORIO-LLEGAD-W
+
+            INSPECT NOM-FIR-W REPLACING FIRST "                        "
+                                           BY "\CONTROL\SC-ARCHPROF.DAT"
+
+            INSPECT NOM-RES-RX REPLACING FIRST "                        "
+                                            BY "\PROG\DATOS\SC-RESRX.DAT".
+
+       ABRIR-ARCHIVO.
+           MOVE "00" TO SW-INVALID-ENV
+           OPEN I-O RESULTADOS-RX.
+
+       LLENAR-ARCHIVO-WEB.
+           MOVE LLAVE-LLEGAD  TO LLAVE-RX
+           READ RESULTADOS-RX WITH NO LOCK
+                INVALID KEY
+                   INITIALIZE REG-RX
+                   PERFORM LLENAR-DATOS
+                   WRITE REG-RX  END-WRITE
+                   GO TO CERRAR-ARCHIVOS
+                NOT INVALID KEY
+                   PERFORM LLENAR-DATOS
+                   REWRITE REG-RX
+                   GO TO CERRAR-ARCHIVOS
+           END-READ.
+
+       LLENAR-DATOS.
+           MOVE LLAVE-LLEGAD           TO LLAVE1-RX
+           MOVE FECHA-LLEGAD           TO FECHA-FACT-RX
+           ACCEPT HORA-FACT-RX FROM TIME
+           MOVE CTA-LLEGAD             TO CTA-NUM-RX
+           MOVE ID-LLEGAD              TO ID-HISTORIA-FACT-RX
+           MOVE DESCRIP-PACI-LLEGAD    TO DESCRIP-PACI-RX
+           MOVE GRUPO-LLEGAD           TO GRUPO-FACT-RX
+           MOVE CODART-LLEGAD          TO COD-ART-FACT-RX
+           MOVE DESCRIP-CUP-LLEGAD     TO DESCRIP-CUP-RX
+           MOVE MEDAYU-LLEGAD          TO SALA-RX
+           MOVE DESCRIP-PROF-LLEGAD    TO NOM-MEDICO-RX
+           MOVE REG-MED-LLEGAD         TO REG-MED-PROF-RX
+           MOVE BIRADS-LLEGAD          TO BIRADS-RX
+           MOVE EDAD-LLEGAD            TO EDAD-RX
+           MOVE SEXO-LLEGAD            TO SEXO-RX
+           MOVE BLOQUE-LLEGAD          TO BLOQUEO-IMP-RX
+           MOVE EMAIL-LLEGAD           TO EMAIL-RX.
+
+       CERRAR-ARCHIVOS.
+           CLOSE RESULTADOS-RX.
+
+010700  PAGINA-CONFIG.
+010720      MOVE "datosrecibidos"    TO COBW3-CNV-NAME
+010730      MOVE DATOS-ENVIO         TO COBW3-CNV-VALUE
+010740      CALL "COBW3_SET_CNV" USING COBW3
+010750
+010760      MOVE "..\PAGINAS\RECIBIDOS.ASPX" TO SALIDA-HTML  
+010770      PERFORM ABRIR-HTML.
+007980   
+007990 CERRAR-SESION.
+008000      CALL "COBW3_FREE" USING COBW3.
+008010      MOVE 1 TO PROGRAM-STATUS.
+008020      EXIT PROGRAM.
+
+008030
+008040 COPY "..\..\FUENTES\SC-WEB.CBL".
+

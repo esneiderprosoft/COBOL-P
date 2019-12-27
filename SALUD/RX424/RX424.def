@@ -1,0 +1,7 @@
+LIBRARY RX424
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

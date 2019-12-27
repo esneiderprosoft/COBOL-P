@@ -1,0 +1,6 @@
+[Compile Options]
+ALPHAL=Yes WORD
+LIB="C:\COBOL"
+RCS=Yes ASCII
+TEST=Yes
+THREAD=MULTI

@@ -1,0 +1,7 @@
+LIBRARY HC-CONSULT-PACIE
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

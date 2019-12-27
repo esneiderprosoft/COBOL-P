@@ -1,0 +1,7 @@
+LIBRARY RX-WEB01
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

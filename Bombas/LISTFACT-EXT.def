@@ -1,0 +1,7 @@
+LIBRARY LISTFACT-EXT
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

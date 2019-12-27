@@ -1,0 +1,7 @@
+LIBRARY SER810
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

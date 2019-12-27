@@ -1,0 +1,7 @@
+LIBRARY HC-NTAS-AM1
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,7 @@
+LIBRARY INV020GA
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

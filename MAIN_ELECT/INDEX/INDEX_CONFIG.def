@@ -1,0 +1,6 @@
+LIBRARY INDEX_CONFIG
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

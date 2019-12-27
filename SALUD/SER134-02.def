@@ -1,0 +1,6 @@
+LIBRARY SER134-02
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

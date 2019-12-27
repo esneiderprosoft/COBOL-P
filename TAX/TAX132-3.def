@@ -1,0 +1,7 @@
+LIBRARY TAX132-3
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

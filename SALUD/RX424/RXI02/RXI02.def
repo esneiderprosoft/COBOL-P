@@ -1,0 +1,7 @@
+LIBRARY RXI02
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

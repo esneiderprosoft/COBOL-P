@@ -1,0 +1,7 @@
+LIBRARY INV401BC
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

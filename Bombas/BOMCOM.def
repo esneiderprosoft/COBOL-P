@@ -1,0 +1,7 @@
+LIBRARY BOMCOM
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

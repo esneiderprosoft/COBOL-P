@@ -1,0 +1,7 @@
+LIBRARY CER101
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

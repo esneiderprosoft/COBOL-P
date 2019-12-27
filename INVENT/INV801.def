@@ -1,0 +1,6 @@
+LIBRARY CON110I
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

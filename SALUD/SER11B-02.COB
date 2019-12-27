@@ -1,0 +1,287 @@
+00012 *=================================================================
+000013*GRABAR ARCHIVO-UNIDAD-SERVICIO SER11B-02  SALUD             
+000014*=================================================================
+000015 IDENTIFICATION DIVISION.
+000016 PROGRAM-ID. "HttpExtensionProc".
+000017 ENVIRONMENT DIVISION.
+000018 CONFIGURATION SECTION.
+000019 INPUT-OUTPUT SECTION.
+000020 FILE-CONTROL.
+000021 COPY "..\..\FUENTES\FS-USUNET.CBL".
+000022 COPY "..\..\FUENTES\FS-SESION.CBL".
+                  
+           SELECT ARCHIVO-UNID-SERV   LOCK MODE IS AUTOMATIC
+                  ASSIGN UNID-SERV-W
+                  ORGANIZATION IS INDEXED                      
+                  ACCESS MODE IS DYNAMIC
+                  RECORD KEY IS CODIGO-UNID-SERV
+                  FILE STATUS IS OTR-STAT.
+
+000390
+000400 DATA DIVISION.
+000410 FILE SECTION.
+000420 COPY "..\..\FUENTES\FD-USUNET.CBL".
+       COPY "..\..\FUENTES\FD-SESION.CBL".
+       COPY "..\..\FUENTES\FD-UNSER.CBL".
+000470
+000540 WORKING-STORAGE  SECTION.
+000550 COPY "..\..\FUENTES\COBW3.CBL".
+000560 COPY "..\..\FUENTES\WEB-CARAC.CBL".
+
+       77 NOM-PLANO-W               PIC x(90).
+       77 UNID-SERV-W               PIC X(60).
+       77 MES-SAL-W                 PIC X(4).
+
+005270 01  DATO-LLEGADA-W.
+           02 LLAVESESION-LLEGA-W.
+              03 ID-LLEGAD-W            PIC X(15).
+              03 FECHA-LLEGAD-W         PIC X(8).
+              03 HORA-LLEGAD-W          PIC X(6).
+           02 IP-SERVER-W               PIC X(18).
+           02 DIR-CONTAB-LLEGADA-W      PIC X(8).
+           02 MES-CONTAB-LLEGADA-W      PIC XX.
+           02 COD-LLEGADA-W             PIC 99.
+           02 DESCRIP-LLEGADA-W         PIC X(30).
+           02 UNIDEDADMIN-LLEGADA-W     PIC X.
+           02 EDADMIN-LLEGADA-W         PIC 9(3).
+           02 UNIDEDADMAX-LLEGADA-W     PIC X.
+           02 EDADMAX-LLEGADA-W         PIC 9(3).
+           02 CENCOS-LLEGADA-W          PIC X(4).
+           02 ACTIVAR-LLEGADA-W         PIC X.
+
+
+       01 REG-W.
+          02 COD-UNIATEN-W             PIC 99.
+          02 DESCRIP-UNIATEN-W         PIC X(30).
+          02 UNIDEDADMIN-UNIATEN-W     PIC X.
+          02 EDADMIN-UNIATEN-W         PIC 9(3).
+          02 UNIDEDADMAX-UNIATEN-W     PIC X.
+          02 EDADMAX-UNIATEN-W         PIC 9(3).
+          02 CENCOS-UNIATEN-W          PIC X(4).
+          02 ACTIVAR-UNIATEN-W         PIC X.
+
+
+       01 DATO-IMPORTAR-WK             PIC X(102).
+       01 DATOS-ENVIO.
+          02 DAT0-ENV                  PIC XX.
+          02 FILLER                    PIC X VALUE "|".
+          02 DAT1-ENV                  PIC X(30).
+
+
+000790
+000791 LINKAGE SECTION.
+000792 COPY "..\..\FUENTES\ISAPICTX.CBL".
+000793
+000794 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+000795
+000810 DECLARATIVES.
+000811 I-O-TEST SECTION.
+000812     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+000813 ESCR-EXCEPTIONES.
+000814     IF OTR-STAT = "00"
+000815        CONTINUE 
+000816     ELSE
+000817        MOVE OTR-STAT                 TO MSJ1-HTML
+000818        MOVE NOM-USU-W                TO MSJ2-HTML
+000819        MOVE "SER11B"                 TO MSJ3-HTML
+000820        GO TO ENVIAR2-ERROR
+000821     END-IF.
+000920
+000930 I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-UNID-SERV.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE            
+           ELSE
+              MOVE OTR-STAT             TO MSJ1-HTML
+              MOVE UNID-SERV-W          TO MSJ2-HTML
+              MOVE "SER11B"             TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.  
+          
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.         
+       ESCR-EXCEPTIONES.                                                                                                                                
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-SESION-W             TO MSJ2-HTML
+              MOVE "SER11B"                 TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+001105
+001150 END DECLARATIVES.
+001160
+001161 INICIAR-IIS.
+001162     MOVE LOW-VALUE TO COBW3.
+001163     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+001164     CALL "COBW3_INIT" USING COBW3.
+001220
+001221 LEER-DATO-HTML.
+000788     MOVE "datosh" TO COBW3-SEARCH-DATA.
+000790     CALL "COBW3_GET_VALUE" USING COBW3.
+000791     MOVE COBW3-GET-DATA TO DATO-IMPORTAR-WK.
+
+           UNSTRING DATO-IMPORTAR-WK DELIMITED BY "|" 
+             INTO LLAVESESION-LLEGA-W, IP-SERVER-W, DIR-CONTAB-LLEGADA-W, MES-CONTAB-LLEGADA-W, COD-LLEGADA-W,
+                  DESCRIP-LLEGADA-W, UNIDEDADMIN-LLEGADA-W, EDADMIN-LLEGADA-W, UNIDEDADMAX-LLEGADA-W, EDADMAX-LLEGADA-W,
+                  CENCOS-LLEGADA-W, ACTIVAR-LLEGADA-W
+           END-UNSTRING.
+
+           MOVE LLAVESESION-LLEGA-W    TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL.
+000830     ACCEPT HORA-TOTAL FROM TIME.
+
+001238 INICIAR-SESION.
+001245     MOVE "D:\progelect\DATOS\SC-SESION.DAT" TO NOM-SESION-W
+
+           GO TO VALIDAR-SESION.
+
+       FIN-VALIDAR-SESION.
+
+001303 ABRIR-USUARIO.
+           INITIALIZE OTR-STAT
+001304     MOVE "D:\progelect\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+001305
+001306     OPEN INPUT ARCHIVO-USUNET
+001307     EVALUATE OTR-STAT
+001308       WHEN "00"  CONTINUE
+001309       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+001310                  CLOSE       ARCHIVO-USUNET
+001311                  OPEN I-O    ARCHIVO-USUNET
+001312                  INITIALIZE REG-USUNET
+001313                  MOVE "." TO NOMBRE-USUNET
+001314                  WRITE REG-USUNET
+001315                  CLOSE       ARCHIVO-USUNET
+001316                  MOVE "Validacion de usuarios"      TO MSJ1-HTML
+001317                  MOVE "Falta configurar usuario"    TO MSJ2-HTML
+001318                  MOVE "Sc"                          TO MSJ3-HTML
+001319                  GO TO ENVIAR2-ERROR
+001320       WHEN OTHER GO TO CERRAR-SESION
+001321     END-EVALUATE.
+001322
+001332     INITIALIZE LLAVE-USUNET.
+
+001334 LEER-USUARIO.
+001335     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+001345     CLOSE ARCHIVO-USUNET.
+001336
+001337     IF NOMBRE-USUNET = SPACES
+001339        MOVE "Validacion de usuarios"      TO MSJ1-HTML
+001340        MOVE "Falta configurar usuario"    TO MSJ2-HTML
+001341        MOVE "Sc"                          TO MSJ3-HTML
+001342        GO TO ENVIAR-ERROR
+001343     END-IF.
+
+       ASIGNAR-NOMBRES.
+           INITIALIZE UNID-SERV-W.
+
+           EVALUATE MES-CONTAB-LLEGADA-W
+             WHEN 01 MOVE "\ENE" TO MES-SAL-W 
+             WHEN 02 MOVE "\FEB" TO MES-SAL-W 
+             WHEN 03 MOVE "\MAR" TO MES-SAL-W 
+             WHEN 04 MOVE "\ABR" TO MES-SAL-W 
+             WHEN 05 MOVE "\MAY" TO MES-SAL-W 
+             WHEN 06 MOVE "\JUN" TO MES-SAL-W 
+             WHEN 07 MOVE "\JUL" TO MES-SAL-W 
+             WHEN 08 MOVE "\AGT" TO MES-SAL-W 
+             WHEN 09 MOVE "\SEP" TO MES-SAL-W 
+             WHEN 10 MOVE "\OCT" TO MES-SAL-W 
+             WHEN 11 MOVE "\NOV" TO MES-SAL-W 
+             WHEN 12 MOVE "\DIC" TO MES-SAL-W 
+           END-EVALUATE
+        
+      *     INSPECT IP-SERVER-W REPLACING FIRST "/" BY "\"
+001614     INITIALIZE UNID-SERV-W
+           MOVE "\\" TO UNID-SERV-W
+001617     INSPECT UNID-SERV-W REPLACING FIRST "                  "
+                                          BY IP-SERVER-W
+
+           INSPECT UNID-SERV-W REPLACING FIRST "     "
+                                     BY    "\PSC$"
+
+001621     INSPECT UNID-SERV-W REPLACING FIRST " "
+001624                                    BY "\"
+
+007190     INSPECT UNID-SERV-W REPLACING FIRST "        "
+                                            BY DIR-CONTAB-LLEGADA-W.
+           
+           INSPECT UNID-SERV-W REPLACING FIRST "                     "
+007200                                      BY "\CONTROL\SC-UNSER.DAT".
+           
+           
+       ABRIR-GRUPO.
+           OPEN INPUT ARCHIVO-UNID-SERV.
+       
+
+
+       LEER.
+           INITIALIZE REG-UNID-SERV REG-W
+           MOVE COD-LLEGADA-W TO CODIGO-UNID-SERV
+           
+           READ ARCHIVO-UNID-SERV WITH NO LOCK
+                INVALID KEY GO TO CERRAR-ARCHIVOS
+           END-READ.
+       
+           MOVE COD-LLEGADA-W TO COD-UNIATEN-W
+           MOVE DESCRIP-LLEGADA-W TO DESCRIP-UNIATEN-W
+           MOVE UNIDEDADMIN-LLEGADA-W TO UNIDEDADMIN-UNIATEN-W
+           MOVE EDADMIN-LLEGADA-W TO EDADMIN-UNIATEN-W
+           MOVE UNIDEDADMAX-LLEGADA-W TO UNIDEDADMAX-UNIATEN-W
+           MOVE EDADMAX-LLEGADA-W TO EDADMAX-UNIATEN-W
+           MOVE CENCOS-LLEGADA-W TO CENCOS-UNIATEN-W
+           MOVE ACTIVAR-LLEGADA-W TO ACTIVAR-UNIATEN-W.
+
+       GUARDAR.
+           
+           IF REG-W = REG-UNID-SERV GO TO CERRAR-ARCHIVOS.
+
+          
+           CLOSE      ARCHIVO-UNID-SERV.
+           OPEN I-O   ARCHIVO-UNID-SERV.
+           MOVE REG-W TO REG-UNID-SERV
+
+      *
+      *     MOVE 55                 TO MSJ1-HTML
+      *     MOVE REG-W            TO MSJ2-HTML
+      *     MOVE REG-UNID-SERV                 TO MSJ3-HTML
+      *     GO TO ENVIAR2-ERROR.
+      * OTR.
+
+
+           REWRITE REG-UNID-SERV
+            
+
+            
+           MOVE 00 TO DAT0-ENV
+           MOVE "REGISTRO MODIFICADO" TO DAT1-ENV.
+
+       CERRAR-ARCHIVOS.
+           CLOSE ARCHIVO-UNID-SERV
+                 
+            GO TO ENVIO-DATOS.
+
+       ERROR-1.
+           MOVE 99 TO DAT0-ENV
+           MOVE "ERROR" TO DAT1-ENV.
+
+           GO TO ENVIO-DATOS.   
+
+
+002147 ENVIO-DATOS.
+           MOVE "datosrecibidos"  TO COBW3-CNV-NAME
+004393     MOVE DATOS-ENVIO       TO COBW3-CNV-VALUE
+004403     CALL "COBW3_SET_CNV"   USING COBW3
+
+004413     MOVE "..\..\FRAMEWORKS\PAGINAS\RECIBIDOS.ASPX"  TO SALIDA-HTML
+004430     PERFORM ABRIR-HTML.
+002544
+002545 CERRAR-SESION.
+002546     CALL "COBW3_FREE" USING COBW3.
+002547     MOVE 1 TO PROGRAM-STATUS.
+002548     EXIT PROGRAM.
+002549
+002566 COPY "..\..\FUENTES\SC-WEB19.CBL".
+002567
+

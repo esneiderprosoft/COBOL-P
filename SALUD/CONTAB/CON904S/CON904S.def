@@ -1,0 +1,7 @@
+LIBRARY CON904S
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

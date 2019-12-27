@@ -1,0 +1,7 @@
+LIBRARY INV010
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

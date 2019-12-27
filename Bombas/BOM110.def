@@ -1,0 +1,7 @@
+LIBRARY BOM110
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

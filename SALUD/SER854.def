@@ -1,0 +1,7 @@
+LIBRARY SER854
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

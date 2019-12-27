@@ -1,0 +1,770 @@
+004820*=================================================================
+004830* GRABA FACTURACION INTERMUNICIPAL
+004840*=================================================================
+004850 IDENTIFICATION DIVISION.
+004860 PROGRAM-ID. "HttpExtensionProc".
+004870 ENVIRONMENT DIVISION.
+004880 CONFIGURATION SECTION.
+004890 INPUT-OUTPUT SECTION.
+004900 FILE-CONTROL.
+004910     COPY "P:\PROG\PROYECT\FUENTES\FS-USUNET.CBL".
+004920     COPY "P:\PROG\PROYECT\FUENTES\FS-SESION.CBL".
+004930     COPY "P:\PROG\PROYECT\FUENTES\FS-INTER-TAX.CBL".
+004930     COPY "P:\PROG\PROYECT\FUENTES\FS-MOVIM.CBL".
+           COPY "P:\PROG\PROYECT\FUENTES\FS-CARRO-TAX.CBL".
+           COPY "P:\PROG\PROYECT\FUENTES\FS-TERCE.CBL".
+           COPY "P:\PROG\PROYECT\FUENTES\FS-MAEST.CBL".
+
+           SELECT ARCHIVO-USUARIOS LOCK MODE IS AUTOMATIC
+                  ASSIGN TO NOM-USUAR-W
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC;
+                  RECORD KEY IS NOMBRE-USU
+                  ALTERNATE RECORD KEY IS CTL-USU     WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CLAVE-USU   WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CLAVE-2-USU WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+           SELECT ARCHIVO-AGENCIAS LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-AGENC-W
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC
+                  RECORD KEY IS CODIGO-AGEN
+                  FILE STATUS  IS OTR-STAT.
+
+005080 DATA DIVISION.
+005090 FILE SECTION.
+005100 COPY "P:\PROG\PROYECT\FUENTES\FD-USUNET.CBL".
+005110 COPY "P:\PROG\PROYECT\FUENTES\FD-SESION.CBL".
+000690 COPY "P:\PROG\PROYECT\FUENTES\FD-INTER-TAX.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-MOVIM.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-CARRO-TAX.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-TERCE.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-MAEST.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-USUAR.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-AGENC.CBL".
+
+005190 WORKING-STORAGE SECTION.
+005200 COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
+005210 COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC19.CBL".
+005220 
+
+       77 NOM-PLANO-W               PIC X(70).
+       77 NOM-AGENC-W               PIC X(70).
+       77 NOM-USUAR-W               PIC X(70).
+       77 SEC-X                     PIC 99.
+
+       01 COD-BANCO-W.
+          02 MAY-BANCO-W            PIC X(4).
+          02 AUX-BANCO-W            PIC X(7).
+
+       01 CTA-CAJA-W.
+          02 SCTA-CAJA-W            PIC X(9).
+          02 AUX-CAJA-W             PIC X(2).
+
+
+        01 REG-INT-W.
+           02 LLAVE-INT-W.
+              03 LLAVE-AGEN-INT-W.
+                 05 AGEN-INT-W              PIC 99.
+                 05 FECHA-PLA-W.
+                    07 ANO-PLA-W            PIC 9(4).
+                    07 MES-PLA-W            PIC 99.
+                    07 DIA-PLA-W            PIC 99.
+              03 NUMERO-INT-W               PIC 9(6).
+              03 LIBRO-INT-W                PIC 9(9).
+           02 FECHA-COMP-W.
+              03 ANO-COMP-W                 PIC 9(4).
+              03 MES-COMP-W                 PIC 99.
+              03 DIA-COMP-W                 PIC 99.
+           02 PLACA-INT-W                   PIC X(6).
+           02 VR-BRUTO-INT-W                PIC 9(12).
+           02 VR-SEGURO-INT-W               PIC 9(12).
+           02 VR-REMESAS-INT-W              PIC 9(12).
+           02 VR-AVANCE-INT-W               PIC 9(12).
+           02 VR-ABONOS-INT-W               PIC 9(12).
+           02 AG-REC-INT-W                  PIC 99.
+           02 VR-DESCUADRE-INT-W            PIC 9(12).
+           02 NIT-ABONO-INT-W               PIC 9(10).
+           02 OPER-ELAB-INT-W               PIC X(4).
+           02 FECHA-ELAB-INT-W              PIC X(8).
+           02 OPER-CORR-INT-W               PIC X(4).
+           02 FECHA-CORR-INT-W              PIC X(6).
+           02 FILLER                        PIC X(2000).
+
+
+       01 PORCE-EMPRESA-EDIT.
+          02 PORCE-ENT-EDIT                 PIC 99.
+          02 POR-DEC-EDIT                   PIC 99.
+
+       01 VARIABLES.
+          02 SEC-W                 PIC 9(3).
+          02 VLR-EMPR-W            PIC 9(12).
+          02 VLR-AGEN-W            PIC 9(12).
+          02 VR-AUTORENTA-W        PIC S9(12).
+          02 DATOS-1        OCCURS 20.
+             03 AGEN-W                PIC 99.
+             03 LIBRO-W               PIC 9(9).
+             03 PLACA-W               PIC X(6).
+             03 VR-BRUTO-W            PIC S9(12).
+             03 VR-SEGURO-W           PIC S9(12).
+             03 VR-REMESAS-W          PIC S9(12).
+             03 VR-AVANCE-W           PIC S9(12).
+             03 VR-ABONOS-W           PIC S9(12).
+             03 VR-DESCUADRE-W        PIC S9(12).
+             03 VR-NETO-W             PIC S9(12).
+             03 MODALIDAD-W           PIC X.
+             03 PROP-W                PIC 9(10).
+             03 NAT-W                 PIC 9.
+             03 C-COSTO-W             PIC X(4).
+             03 PORC-EMPRESA-W        PIC 99V99.
+          02 DATOS-ACUM-W.
+             03 VLR-VENTA-EMP         PIC 9(10).
+             03 VLR-REMES-EMP         PIC 9(10).
+             03 VLR-SEGUR-EMP         PIC 9(10).
+             03 VLR-VENTA-AGE         PIC 9(10).
+             03 VLR-REMES-AGE         PIC 9(10).
+             03 NETO-AGEN-W           PIC S9(10).
+
+       01 VARIABLES-T.
+	  02 VR-BRUTO-T               PIC S9(9).
+	  02 VR-SEGURO-T              PIC S9(9).
+          02 VR-REMESAS-T             PIC S9(9).
+          02 VR-TOTAL-T               PIC S9(9).
+          02 VR-AVANCE-T              PIC S9(9).
+          02 VR-DESCUADRE-T           PIC S9(9).
+          02 VR-ABONOS-T              PIC S9(9).
+          02 VR-CAJA                  PIC S9(7)V99.
+          02 VR-BANCOS                PIC S9(7)V99.
+          02 ACUM-PROP-T              PIC S9(7).
+          02 ACUM-AGEN-T              PIC S9(7).
+          02 REM-PROP-T               PIC S9(7).
+          02 REM-AGEN-T               PIC S9(7).
+          02 VALOR-TEM-W              PIC S9(11).
+
+
+006310 LINKAGE SECTION.
+006320 COPY "P:\PROG\PROYECT\FUENTES\ISAPICTX.CBL".
+006330 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+006340
+006350 DECLARATIVES.
+006360 I-O-TEST SECTION.
+006370     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+006380 ESCR-EXCEPTIONES.
+006390     IF OTR-STAT = "00"
+006400        CONTINUE 
+006410     ELSE
+006420        MOVE OTR-STAT         TO MSJ1-HTML
+006430        MOVE NOM-USU-W        TO MSJ2-HTML
+006440        MOVE "TAX132-2"       TO MSJ3-HTML
+006450        GO TO ENVIAR2-ERROR
+006460     END-IF.
+006470
+006480 I-O-TEST SECTION.
+006490     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.
+006500 ESCR-EXCEPTIONES.
+006510     IF OTR-STAT = "00" 
+006520        CONTINUE 
+006530     ELSE
+006540        MOVE OTR-STAT         TO MSJ1-HTML
+006550        MOVE NOM-SESION-W     TO MSJ2-HTML
+006560        MOVE "TAX132-2"       TO MSJ3-HTML
+006570        GO TO ENVIAR2-ERROR
+006580     END-IF.
+
+006480 I-O-TEST SECTION.
+006490     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUARIOS.
+006500 ESCR-EXCEPTIONES.
+006510     IF OTR-STAT = "00" 
+006520        CONTINUE 
+006530     ELSE
+006540        MOVE OTR-STAT         TO MSJ1-HTML
+006550        MOVE NOM-USUAR-W      TO MSJ2-HTML
+006560        MOVE "TAX132-2"       TO MSJ3-HTML
+006570        GO TO ENVIAR2-ERROR
+006580     END-IF.
+
+006590  
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-INTER.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT          TO MSJ1-HTML
+002760        MOVE NOM-INTER-TAX-LNK TO MSJ2-HTML
+002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-CARROS.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT         TO MSJ1-HTML
+002760        MOVE NOM-CAR-TAX-LNK  TO MSJ2-HTML
+002770        MOVE "TAX132-2"       TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON MOVIMIENTO-DIARIO.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT          TO MSJ1-HTML
+002760        MOVE NOM-MOV           TO MSJ2-HTML
+002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-TERCEROS.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT          TO MSJ1-HTML
+002760        MOVE NOM-TER-LNK       TO MSJ2-HTML
+002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-MAESTROS.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT          TO MSJ1-HTML
+002760        MOVE NOM-MAE-LNK       TO MSJ2-HTML
+002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-AGENCIAS.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT          TO MSJ1-HTML
+002760        MOVE NOM-AGENC-W       TO MSJ2-HTML
+002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+006720  END DECLARATIVES.
+006730
+006740 INICIAR-IIS.
+006750     MOVE LOW-VALUE TO COBW3.
+006760     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+006770     CALL "COBW3_INIT" USING COBW3.
+006780
+006790 LEER-DATO-HTML.
+006800     MOVE "datosh" TO COBW3-SEARCH-DATA.
+006810     CALL "COBW3_GET_VALUE" USING COBW3.
+006820     MOVE COBW3-GET-DATA    TO LINEA-LLEGAD-W.
+
+           INITIALIZE DATO-LLEGADA-W REG-INT-W
+
+           UNSTRING LINEA-LLEGAD-W DELIMITED BY "|"
+              INTO SESION-LLEGAD-W, DIRECTORIO-LLEGAD-W, CARPTA-LLEGAD-W, AGEN-INT-W, FECHA-PLA-W,
+                   NUMERO-INT-W, LIBRO-INT-W, FECHA-COMP-W, PLACA-INT-W, OPER-ELAB-INT-W, FECHA-ELAB-INT-W
+           END-UNSTRING.
+
+           MOVE SESION-LLEGAD-W    TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL.
+           ACCEPT HORA-TOTAL FROM TIME.
+
+       LEER-TABLA-LLEGAD.
+           INITIALIZE LN-STRING
+           MOVE 1 TO LN-STRING
+
+           PERFORM LLENAR-TABLA VARYING LN-STRING FROM LN-STRING BY 1
+                                                  UNTIL LN-STRING > 20.
+
+000797 INICIAR-SESION.
+000806     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-SESION.DAT" TO NOM-SESION-W.
+000810     GO TO VALIDAR-SESION.
+000850
+000860 FIN-VALIDAR-SESION.
+006840     
+006900 ABRIR-USUARIO.
+006910     INITIALIZE OTR-STAT.
+006920     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+006930
+006940     OPEN INPUT ARCHIVO-USUNET
+006950     EVALUATE OTR-STAT
+006960       WHEN "00"  CONTINUE
+006970       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+006980                  INITIALIZE REG-USUNET
+006990                  WRITE REG-USUNET
+007000                  CLOSE ARCHIVO-USUNET
+007010                  MOVE "SC-2"                        TO MSJ1-HTML
+007020                  MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007030                  MOVE "TAX132-2"                    TO MSJ3-HTML
+007040                  GO TO ENVIAR2-ERROR
+007050       WHEN OTHER GO TO CERRAR-SESION
+007060     END-EVALUATE.
+007070
+007080     INITIALIZE LLAVE-USUNET.
+
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007130
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+007210     IF NOMBRE-USUNET = SPACES
+007220     OR NIT-USUNET = ZEROS
+007230        MOVE "SC-2"      TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios" TO MSJ2-HTML
+007250        MOVE "TAX132-2"  TO MSJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+007280 
+007350
+       ASIGNAR-NOMBRES.
+
+           INITIALIZE NOM-INTER-TAX-LNK
+
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+007287     MOVE "\\" TO NOM-INTER-TAX-LNK
+007288     INSPECT NOM-INTER-TAX-LNK REPLACING FIRST "                    "
+007289                                            BY IP-DATOS-USUNET
+007290     INSPECT NOM-INTER-TAX-LNK REPLACING FIRST " "
+007291                                            BY "\"
+007292     INSPECT NOM-INTER-TAX-LNK REPLACING FIRST "                              "
+007293                                            BY DIRECTORIO-LLEGAD-W
+
+           MOVE NOM-INTER-TAX-LNK  TO NOM-TER-LNK  NOM-MAE-LNK NOM-AGENC-W 
+                                      NOM-MOV NOM-USUAR-W NOM-CAR-TAX-LNK
+
+           INSPECT NOM-USUAR-W REPLACING FIRST "                       "
+                                            BY "\CONTROL\SC-ARCHUSU.DAT".
+
+           INSPECT NOM-INTER-TAX-LNK REPLACING FIRST "                         "
+                                                  BY "\CONTROL\SC-ARCHINTER.DAT".
+
+           INSPECT NOM-CAR-TAX-LNK REPLACING FIRST "                        "
+                                                BY "\CONTROL\SC-ARCHCARR.DAT".
+
+           INSPECT NOM-TER-LNK REPLACING FIRST "                       "
+                                            BY "\CONTROL\SC-ARCHTER.DAT".
+
+           INSPECT NOM-MAE-LNK REPLACING FIRST "                       "
+                                            BY "\CONTROL\SC-ARCHMAE.DAT".
+
+           INSPECT NOM-AGENC-W REPLACING FIRST "                        "
+                                            BY "\CONTROL\SC-ARCHAGEN.DAT".
+
+           INSPECT NOM-MOV REPLACING FIRST "     "
+                                        BY CARPTA-LLEGAD-W
+
+           INSPECT NOM-MOV REPLACING FIRST "              "
+                                        BY "SC-ARCHMOV.DAT".
+
+
+       LEER-USUARIO.
+           OPEN INPUT ARCHIVO-USUARIOS.
+           READ ARCHIVO-USUARIOS NEXT WITH NO LOCK AT END
+                CLOSE ARCHIVO-USUARIOS
+           END-READ.
+
+
+       LEER-PLACA.
+           OPEN INPUT ARCHIVO-CARROS.
+
+           MOVE PLACA-INT-W  TO CODIGO-CAR
+           READ ARCHIVO-CARROS WITH NO LOCK
+                INVALID KEY 
+                        MOVE "SC-2"     TO MSJ1-HTML
+                        MOVE "Placa no existe" TO MSJ2-HTML
+                        MOVE "TAX132-2" TO MSJ3-HTML
+                        GO TO ENVIAR2-ERROR
+           END-READ
+
+           CLOSE ARCHIVO-CARROS.
+
+       LEER-TERCERO.
+           OPEN INPUT ARCHIVO-TERCEROS
+           MOVE PROPIET-CAR   TO COD-TERCERO
+
+           READ ARCHIVO-TERCEROS WITH NO LOCK
+                INVALID KEY
+                        MOVE "SC-2"    TO MSJ1-HTML
+                        MOVE "Propietario no existe!" TO MSJ2-HTML
+                        MOVE "TAX132-2" TO MSJ3-HTML
+                        GO TO ENVIAR2-ERROR
+           END-READ
+           CLOSE ARCHIVO-TERCEROS.
+
+
+       GRABAR-INTER.
+            OPEN INPUT ARCHIVO-INTER
+            MOVE NUMERO-INT-W TO NUMERO-INT.
+            START ARCHIVO-INTER KEY = NUMERO-INT
+                  INVALID KEY CONTINUE
+                  NOT INVALID KEY 
+                          ADD 1 TO NUMERO-INT-W
+                          GO TO GRABAR-INTER
+           END-START
+
+           CLOSE ARCHIVO-INTER
+           OPEN I-O ARCHIVO-INTER
+           MOVE REG-INT-W TO REG-INT
+
+           PERFORM GRABAR-TABLA-INTER VARYING J FROM 1 BY 1
+                                                UNTIL J > 20.
+
+           CLOSE      ARCHIVO-INTER
+           OPEN INPUT ARCHIVO-INTER.
+
+      DATOS-MOVIMIENTO.
+           INITIALIZE MOV-DIARIO
+           MOVE NUMERO-INT-W    TO COMPROB-MOV
+           MOVE "1I"            TO LOTE-MOV
+           MOVE 0               TO ID-MOV
+           MOVE 00              TO COSTO-MOV
+           MOVE 0               TO SECU-MOV
+           MOVE FECHA-COMP-W    TO FECHA-MOV
+           MOVE FUNCTION CURRENT-DATE TO FECHA-ELAB-MOV.
+
+           OPEN I-O MOVIMIENTO-DIARIO.
+       GRABAR-DATOS.
+            OPEN INPUT ARCHIVO-AGENCIAS
+            PERFORM REGISTRO-PROPIETARIOS VARYING J FROM 1 BY 1
+                                                    UNTIL J > 20.
+            CLOSE ARCHIVO-AGENCIAS.
+
+       GRABAR-AGENCIA.
+           COMPUTE ID-MOV = 9900 + AGEN-INT-W.
+
+           IF NIT-USU = 892002960
+              MOVE AGEN-INT-W  TO COSTO-MOV
+           ELSE
+              MOVE 03        TO COSTO-MOV
+           END-IF.
+
+           IF VR-DESCUADRE-T IS NOT ZERO
+              IF AGEN-INT-W = 09 OR 34
+                 MOVE 28151020098     TO CUENTA-MOV
+              ELSE
+                 MOVE "13302000000"   TO CUENTA-MOV
+                 MOVE AGEN-INT-W      TO AUXIL2-MOV
+              END-IF
+              MOVE VR-DESCUADRE-T TO VALOR-MOV
+              MOVE "SALDO LIBRO" TO DETALLE-MOV
+              PERFORM GRABAR-SECUENCIA
+           END-IF
+
+
+           IF VLR-VENTA-AGE > 0
+              COMPUTE ID-MOV = 9900 + AGEN-INT-W
+
+              IF AGEN-INT-W = 09 OR 34
+                 MOVE 28151020098  TO CUENTA-MOV
+              ELSE
+                 MOVE "28151040000" TO CUENTA-MOV
+              END-IF
+
+              MOVE AGEN-INT-W      TO AUXIL2-MOV
+
+              MOVE "PRODUCIDO FFFFFFFF PARA AGENCIA" TO DETALLE-MOV
+              INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+              COMPUTE VALOR-MOV ROUNDED = VLR-VENTA-AGE  * -1
+              PERFORM GRABAR-SECUENCIA
+           END-IF
+
+           IF VLR-REMES-AGE > 0
+              COMPUTE ID-MOV = 9900 + AGEN-INT-W
+              MOVE "28151040000" TO CUENTA-MOV
+              MOVE AGEN-INT-W      TO AUXIL2-MOV
+              MOVE "REMESAS PARA LA AGENCIA" TO DETALLE-MOV
+              COMPUTE VALOR-MOV ROUNDED = VLR-REMES-AGE * -1
+              PERFORM GRABAR-SECUENCIA
+           END-IF.
+
+
+       GRABAR-EMPRESA.
+
+            IF VLR-VENTA-EMP  > 0
+               COMPUTE ID-MOV = 9900 + AGEN-INT-W
+               MOVE "41450520" TO CUENTA-MOV
+               MOVE AGEN-INT-W   TO AUXIL2-MOV
+
+               MOVE "PRODUCIDO FFFFFFFF PARA EMPRESA" TO DETALLE-MOV
+               INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+               COMPUTE VALOR-MOV ROUNDED = VLR-VENTA-EMP * -1
+               PERFORM GRABAR-SECUENCIA
+           END-IF
+
+            IF VLR-REMES-EMP > 0
+               COMPUTE ID-MOV = 9900 + AGEN-INT-W
+               MOVE "41450520"   TO CUENTA-MOV
+               MOVE AGEN-INT-W   TO AUXIL2-MOV
+               MOVE 03 TO COSTO-MOV
+
+               MOVE "REMESAS FFFFFFFF PARA EMPRESA" TO DETALLE-MOV
+               INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+               COMPUTE VALOR-MOV ROUNDED = VLR-REMES-EMP * -1
+               PERFORM GRABAR-SECUENCIA
+           END-IF
+
+           IF VLR-SEGUR-EMP > 0
+              COMPUTE ID-MOV = 9900 + AGEN-INT-W
+              IF NIT-USU = 892002960
+                 MOVE "28150510006" TO CUENTA-MOV
+              ELSE
+                 MOVE "26352500002" TO CUENTA-MOV
+              END-IF
+
+              MOVE 00 TO COSTO-MOV
+              MOVE "SEGURO RECAUDADO FFFFFFFF" TO DETALLE-MOV
+              INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+              COMPUTE VALOR-MOV ROUNDED = VLR-SEGUR-EMP * -1
+              PERFORM GRABAR-SECUENCIA
+           END-IF.
+
+       GRABAR-DEBITO.
+            COMPUTE ID-MOV = 9900 + AGEN-INT-W.
+
+            IF NIT-USU = 892002960
+               MOVE AGEN-INT-W  TO COSTO-MOV
+            ELSE
+               MOVE 03          TO COSTO-MOV
+            END-IF.
+
+            IF (NIT-USU = 892000113 AND AGEN-INT-W = 03)
+                MOVE "900518747" TO ID-MOV
+            END-IF.
+
+            IF (NIT-USU = 892000113 AND AGEN-INT-W = 46)
+                MOVE "900995146" TO ID-MOV
+            END-IF
+
+            IF (NIT-USU = 892000113 AND AGEN-INT-W = 47)
+                MOVE "890100513" TO ID-MOV
+            END-IF
+
+            IF VR-BANCOS > 0
+               MOVE COD-BANCO-W   TO CUENTA-MOV
+               MOVE VR-BANCOS     TO VALOR-MOV
+
+               MOVE "CONSIGNADO POR LA AGENCIA FFFFFFFF" TO DETALLE-MOV
+               INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+               PERFORM GRABAR-SECUENCIA
+               MOVE 0 TO VR-BANCOS
+           END-IF
+
+           IF VR-CAJA IS NOT ZERO
+              MOVE CTA-CAJA-W TO CUENTA-MOV
+              MOVE "RECIBIDO EN CAJA FFFFFFFF" TO DETALLE-MOV
+              INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+              MOVE VR-CAJA TO VALOR-MOV
+              PERFORM  GRABAR-SECUENCIA
+           END-IF.
+
+
+010700 PAGINA-CONFIG.  
+010720     MOVE "statuscode" TO COBW3-CNV-NAME
+010730     MOVE "00"         TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV" USING COBW3
+
+000570	   MOVE "datosrecibidos" TO COBW3-CNV-NAME
+000580     MOVE "Proceso correcto!" TO COBW3-CNV-VALUE
+000590	   CALL "COBW3_SET_CNV"  USING COBW3
+
+010720     MOVE "programa-id" TO COBW3-CNV-NAME
+010730     MOVE "TAX132-2"    TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV" USING COBW3
+
+010760     MOVE "..\PAGINAS\RECIBIDOSPLANO.ASPX" TO SALIDA-HTML
+010770     PERFORM ABRIR-HTML.
+
+007990 CERRAR-SESION.
+008000     CALL "COBW3_FREE" USING COBW3.
+008010     MOVE 1 TO PROGRAM-STATUS.
+008020     EXIT PROGRAM.
+
+       GRABAR-TABLA-INTER.
+            IF (VR-BRUTO-W (J) + VR-SEGURO-W (J) + VR-REMESAS-W (J)) > 0
+            OR  VR-AVANCE-W  (J) IS NOT ZERO
+            OR  VR-ABONOS-W  (J) IS NOT ZERO
+                MOVE LIBRO-W        (J) TO LIBRO-INT
+                MOVE PLACA-W        (J) TO PLACA-INT
+                MOVE VR-BRUTO-W     (J) TO VR-BRUTO-INT
+                MOVE VR-SEGURO-W    (J) TO VR-SEGURO-INT
+                MOVE VR-REMESAS-W   (J) TO VR-REMESAS-INT
+                MOVE VR-AVANCE-W    (J) TO VR-AVANCE-INT
+                MOVE VR-ABONOS-W    (J) TO VR-ABONOS-INT
+                MOVE VR-DESCUADRE-W (J) TO VR-DESCUADRE-INT
+                WRITE REG-INT END-WRITE
+           END-IF.
+
+       REGISTRO-PROPIETARIOS.
+            MOVE PROP-W  (J)     TO ID-MOV
+
+            MOVE LIBRO-W (J) TO REFER-MOV
+            MOVE AGEN-W  (J) TO CODIGO-AGEN.
+            READ ARCHIVO-AGENCIAS
+                 INVALID KEY MOVE 15 TO PRODUC-AGEN
+                             MOVE 50 TO REMESA-AGEN
+            END-READ
+			
+            IF  NIT-USU = 892002960 AND MODALIDAD-W (J) = "H"
+                MOVE 17 TO PRODUC-EMPR-AGEN
+            END-IF
+
+            IF PORC-EMPRESA-W (J) IS ZERO
+               MOVE PRODUC-EMPR-AGEN TO PORC-EMPRESA-W (J)
+            END-IF.
+
+            IF  NIT-USU = 892002960 AND NAT-W (J) = 2
+                MOVE "41450530004" TO CUENTA-MOV
+            ELSE
+               MOVE "28151020098" TO CUENTA-MOV
+            END-IF
+
+           IF NIT-USU = 892000113
+              EVALUATE PLACA-W(J)
+                  WHEN "UUD005" MOVE 41450600001 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "UUD060" MOVE 41450600002 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "UUD672" MOVE 41450600004 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "UUD708" MOVE 41450600005 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "SXB038" MOVE 41450600006 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "SXB777" MOVE 41450600007 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "SXC050" MOVE 41450600008 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN "SXC494" MOVE 41450600009 TO CUENTA-MOV
+                                MOVE PROP-W  (J) TO ID-MOV
+                  WHEN OTHER
+                       EVALUATE AGEN-W (J)
+                           WHEN 46 MOVE "28151020098"  TO CUENTA-MOV
+                                   MOVE PROP-W  (J) TO ID-MOV
+                           WHEN 47 MOVE "28151020098"  TO CUENTA-MOV
+                                   MOVE PROP-W  (J) TO ID-MOV
+                           WHEN OTHER MOVE "28151020098"  TO CUENTA-MOV
+                      END-EVALUATE
+              END-EVALUATE
+           ELSE
+              MOVE "28151020098"  TO CUENTA-MOV
+           END-IF
+
+           MOVE C-COSTO-W (J)     TO COSTO-MOV
+           MOVE LIBRO-W   (J)     TO REFER-MOV
+
+           MOVE AGEN-INT-W   TO Y
+
+           IF VR-BRUTO-W (J) > 0
+              COMPUTE VLR-EMPR-W ROUNDED = VR-BRUTO-W (J) * (PORC-EMPRESA-W (J) / 100)
+              ADD VLR-EMPR-W TO VLR-VENTA-EMP
+
+              COMPUTE VLR-AGEN-W ROUNDED = VR-BRUTO-W (J) * (PRODUC-AGEN / 100)
+              ADD VLR-AGEN-W TO VLR-VENTA-AGE
+
+              MOVE "PRODUCIDO DEL DIA FFFFFFFF " TO DETALLE-MOV
+              INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+              COMPUTE VALOR-MOV ROUNDED = (VR-BRUTO-W (J) - VLR-EMPR-W - VLR-AGEN-W) * -1
+              PERFORM GRABAR-SECUENCIA
+
+              IF MAY1-MOV = 41
+                 ADD VR-BRUTO-W (J) TO VR-AUTORENTA-W
+              END-IF
+           END-IF
+
+           IF VR-REMESAS-W (J) > 0
+              COMPUTE VLR-EMPR-W ROUNDED = VR-REMESAS-W (J) * (REMESA-EMPR-AGEN / 100)
+              ADD VLR-EMPR-W TO VLR-REMES-EMP
+
+              COMPUTE VLR-AGEN-W ROUNDED =  VR-REMESAS-W (J) * (REMESA-AGEN / 100)
+              ADD VLR-AGEN-W TO VLR-REMES-AGE
+
+              MOVE "REMESA DEL DIA FFFFFFFF" TO DETALLE-MOV
+              INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+              COMPUTE VALOR-MOV ROUNDED = (VR-REMESAS-W (J) - VLR-EMPR-W - VLR-AGEN-W ) * -1
+              PERFORM GRABAR-SECUENCIA
+           END-IF
+
+           IF NIT-USU = 892002960  AND NAT-W (J) = 2
+              MOVE "51454000001" TO CUENTA-MOV
+           ELSE
+              MOVE "28151020098"  TO CUENTA-MOV
+           END-IF
+
+           IF VR-AVANCE-W (J) IS NOT ZERO
+              MOVE "AVANCES DEL DIA FFFFFFFF " TO DETALLE-MOV
+              INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
+
+              MOVE VR-AVANCE-W (J) TO VALOR-MOV
+
+              IF NIT-USU = 892000113
+                 EVALUATE AGEN-W (J) 
+                     WHEN 46 MOVE 900995149     TO ID-MOV
+                             MOVE "13050560006" TO CUENTA-MOV
+                     WHEN 47 MOVE 890100531     TO ID-MOV
+                             MOVE "13050560006" TO CUENTA-MOV
+                     WHEN OTHER 
+                             MOVE "28151020098"  TO CUENTA-MOV
+                             MOVE PROP-W (J)     TO ID-MOV
+                 END-EVALUATE
+              END-IF
+              PERFORM GRABAR-SECUENCIA
+           END-IF
+
+           IF VR-ABONOS-W (J) IS NOT ZERO
+               MOVE "ABONO" TO DETALLE-MOV
+               COMPUTE VALOR-MOV = VR-ABONOS-W (J) * -1
+               PERFORM GRABAR-SECUENCIA
+           END-IF
+
+           IF VR-SEGURO-W (J) IS NOT ZERO
+              ADD VR-SEGURO-W (J) TO VLR-SEGUR-EMP
+           END-IF.
+
+       GRABAR-SECUENCIA.
+           IF VALOR-MOV IS NOT ZERO
+              ADD 1 TO SEC-W
+              PERFORM EDITAR-SECUENCIA
+              WRITE MOV-DIARIO END-WRITE
+           END-IF.
+
+       LLENAR-TABLA.
+           INITIALIZE LINEA-TABLA-LLEGAG-W PORCE-EMPRESA-EDIT
+           STRING "LIN-", LN-STRING DELIMITED BY SIZE INTO LIN-STRING-W END-STRING
+
+           MOVE LIN-STRING-W      TO COBW3-SEARCH-DATA.
+           CALL "COBW3_GET_VALUE" USING COBW3.
+           MOVE COBW3-GET-DATA    TO LINEA-TABLA-LLEGAG-W
+
+           IF LINEA-TABLA-LLEGAG-W = SPACES OR LOW-VALUES
+              CONTINUE
+           ELSE
+             ADD 1 TO I
+             UNSTRING LINEA-TABLA-LLEGAG-W DELIMITED BY "|"
+                 INTO AGEN-W (I), LIBRO-W (I), PLACA-W (I), VR-BRUTO-W (I), VR-SEGURO-W (I), 
+                      VR-REMESAS-W (I), VR-AVANCE-W (I), VR-ABONOS-W (I), VR-DESCUADRE-W (I),
+                      VR-NETO-W (I), MODALIDAD-W (I), PROP-W (I), NAT-W (I), C-COSTO-W (I), PORCE-EMPRESA-EDIT
+             END-UNSTRING
+
+             MOVE PORCE-EMPRESA-EDIT  TO PORC-EMPRESA-W (I)
+           END-IF.
+
+       COPY "P:\PROG\PROYECT\FUENTES\SC-WEB19.CBL".
+       COPY "P:\PROG\PROYECT\WEB\CONTAB\CON910.CBL".
+

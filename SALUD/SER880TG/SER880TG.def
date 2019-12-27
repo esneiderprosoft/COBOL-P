@@ -1,0 +1,7 @@
+LIBRARY SER880TG
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

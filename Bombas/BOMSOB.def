@@ -1,0 +1,7 @@
+LIBRARY BOMSOB
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,7 @@
+LIBRARY HC003_1
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

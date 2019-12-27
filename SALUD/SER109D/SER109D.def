@@ -1,0 +1,7 @@
+LIBRARY SER109D
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

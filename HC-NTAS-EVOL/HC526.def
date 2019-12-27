@@ -1,0 +1,7 @@
+LIBRARY HC526
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

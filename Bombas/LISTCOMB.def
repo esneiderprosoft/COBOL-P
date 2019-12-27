@@ -1,0 +1,7 @@
+LIBRARY LISTCOMB
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

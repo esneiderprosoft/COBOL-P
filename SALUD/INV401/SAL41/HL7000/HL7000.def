@@ -1,0 +1,7 @@
+LIBRARY HL7000
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

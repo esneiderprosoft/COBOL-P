@@ -1,0 +1,7 @@
+LIBRARY INV421_R
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

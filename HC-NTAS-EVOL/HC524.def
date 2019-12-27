@@ -1,0 +1,7 @@
+LIBRARY HC524
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

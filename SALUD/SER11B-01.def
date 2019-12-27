@@ -1,0 +1,7 @@
+LIBRARY SER11B-01
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

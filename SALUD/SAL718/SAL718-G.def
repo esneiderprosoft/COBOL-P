@@ -1,0 +1,6 @@
+LIBRARY SAL718-G
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

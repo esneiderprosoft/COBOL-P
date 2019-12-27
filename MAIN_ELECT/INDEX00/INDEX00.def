@@ -1,0 +1,7 @@
+LIBRARY INDEX00 
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

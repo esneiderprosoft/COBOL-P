@@ -1,0 +1,7 @@
+LIBRARY HL7001
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

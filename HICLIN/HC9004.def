@@ -1,0 +1,7 @@
+LIBRARY HC9004
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc             
+    TerminateExtension 
+
+

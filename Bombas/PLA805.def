@@ -1,0 +1,7 @@
+LIBRARY PLA805
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

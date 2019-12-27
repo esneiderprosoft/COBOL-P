@@ -1,0 +1,8 @@
+LIBRARY INV809
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+
+

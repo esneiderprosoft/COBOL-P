@@ -1,0 +1,7 @@
+LIBRARY HCDETAL-ANT
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

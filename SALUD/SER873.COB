@@ -1,0 +1,403 @@
+      *=================================================================
+      *CREA, ENVIA OBJETO UNIDADES DE SERVICIO - SER873
+      *=================================================================
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. "HttpExtensionProc".
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+       COPY "..\..\FUENTES\FS-USUNET.CBL".
+       COPY "..\..\FUENTES\FS-SESION.CBL".
+       COPY "..\..\FUENTES\FS-UNSER.CBL".
+
+           SELECT ARCHIVO-COSTO LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-COSTO-LNK
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC;
+                  RECORD KEY IS COD-COSTO
+                  FILE STATUS IS OTR-STAT.
+
+           SELECT ARCHIVO-USUARIOS LOCK MODE IS AUTOMATIC
+                  ASSIGN TO NOM-USUAR-LNK
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC;
+                  RECORD KEY IS NOMBRE-USU
+                  ALTERNATE RECORD KEY IS CTL-USU     WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CLAVE-USU   WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CLAVE-2-USU WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.                  
+                  
+       DATA DIVISION.
+       FILE SECTION.
+       COPY "..\..\FUENTES\FD-USUNET.CBL".
+       COPY "..\..\FUENTES\FD-SESION.CBL".
+       COPY "..\..\FUENTES\FD-UNSER.CBL".
+       COPY "..\..\FUENTES\FD-COSTO.CBL".
+       COPY "..\..\FUENTES\FD-USUAR.CBL".
+
+      
+       WORKING-STORAGE SECTION.
+       COPY "..\..\FUENTES\COBW3.CBL".
+       COPY "..\..\FUENTES\WEB-CARAC19.CBL".
+       
+       77 CONT                         PIC 9(4).
+       77 DATOS-PLANO-W                PIC X(1000).    
+       
+       01 LIN-1.  
+001820    02 FILLER                   PIC X(7)   VALUE "{*COD*:".
+001830    02 FILLER                   PIC X      VALUE "*".
+001840    02 COD-UNSERV-J            PIC 99.
+001850    02 FILLER                   PIC XX     VALUE "*,".
+001860    02 FILLER                   PIC X(10)  VALUE "*DESCRIP*:".
+001870    02 FILLER                   PIC X      VALUE "*".
+001880    02 DESCRIP-UNSERV-J        PIC X(30).
+          02 FILLER                   PIC XX     VALUE "*,".
+          02 FILLER                   PIC X(14)  VALUE "*UNIDEDADMIN*:".
+          02 FILLER                   PIC X      VALUE "*".
+          02 UNIDEDADMIN-UNSERV-J    PIC X.
+          02 FILLER                   PIC XX     VALUE "*,".
+          02 FILLER                   PIC X(10)  VALUE "*EDADMIN*:".
+          02 FILLER                   PIC X      VALUE "*".
+          02 EDADMIN-UNSERV-J        PIC 9(3).
+          02 FILLER                   PIC XX     VALUE "*,".
+          02 FILLER                   PIC X(14)  VALUE "*UNIDEDADMAX*:".
+          02 FILLER                   PIC X      VALUE "*".
+          02 UNIDEDADMAX-UNSERV-J    PIC X.
+          02 FILLER                   PIC XX     VALUE "*,".
+001860    02 FILLER                   PIC X(10)  VALUE "*NITUSU*:".
+001870    02 FILLER                   PIC X      VALUE "*".
+          02 NIT-UNSERV-J            PIC X(10).
+          02 FILLER                   PIC XX     VALUE "*,".
+          02 FILLER                   PIC X(10)  VALUE "*EDADMAX*:".
+          02 FILLER                   PIC X      VALUE "*".
+          02 EDADMAX-UNSERV-J        PIC 9(3).
+          02 FILLER                   PIC XX     VALUE "*,".
+          02 FILLER                   PIC X(9)   VALUE "*CENCOS*:".
+          02 FILLER                   PIC X      VALUE "*".
+          02 CENCOS-UNSERV-J         PIC X(4).
+          02 FILLER                   PIC XX     VALUE "*,".
+          02 FILLER                   PIC X(9)  VALUE "*ESTADO*:".
+001830    02 FILLER                   PIC X      VALUE "*".
+001840    02 ACTIVAR-UNSERV-J        PIC X(8).
+
+001970    02 FILLER                   PIC XX     VALUE "*}".    
+001980    02 CIERRE-LIN-1             PIC X.
+
+       
+       LINKAGE SECTION.
+       COPY "..\..\FUENTES\ISAPICTX.CBL".
+       PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+      
+       DECLARATIVES.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE  
+           ELSE
+              MOVE OTR-STAT         TO MSJ1-HTML
+              MOVE NOM-USUAR-LNK        TO MSJ2-HTML
+              MOVE "SER873"         TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+      
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00" 
+              CONTINUE 
+           ELSE
+              MOVE OTR-STAT         TO MSJ1-HTML
+              MOVE NOM-SESION-W     TO MSJ2-HTML
+              MOVE "SER873"         TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+006480 I-O-TEST SECTION.
+006490     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUARIOS.
+006500 ESCR-EXCEPTIONES.
+006510     IF OTR-STAT = "00" 
+006520        CONTINUE 
+006530     ELSE
+006540        MOVE OTR-STAT         TO MSJ1-HTML
+006550        MOVE NOM-USUAR-LNK    TO MSJ2-HTML
+006560        MOVE "SER873"         TO MSJ3-HTML
+006570        GO TO ENVIAR2-ERROR
+006580     END-IF.           
+
+        I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-UNID-SERV.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-UNSER-LNK            TO MSJ2-HTML
+              MOVE "SER873"                 TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+        I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-COSTO.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE  OTR-STAT                 TO MSJ1-HTML
+              MOVE  NOM-COSTO-LNK            TO MSJ2-HTML
+              MOVE  "SER873"                 TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+        END DECLARATIVES.
+      
+001161 INICIAR-IIS.
+001162     MOVE LOW-VALUE TO COBW3.
+001163     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+001164     CALL "COBW3_INIT" USING COBW3.
+001220
+
+       LEER-DATO-HTML.
+000788     MOVE "datosh" TO COBW3-SEARCH-DATA.
+000790     CALL "COBW3_GET_VALUE" USING COBW3.
+000791     MOVE COBW3-GET-DATA TO LINEA-LLEGAD-W.
+
+           UNSTRING LINEA-LLEGAD-W DELIMITED BY "|" 
+             INTO SESION-LLEGAD-W, DIRECTORIO-LLEGAD-W, CARPTA-LLEGAD-W
+           END-UNSTRING.
+
+           MOVE SESION-LLEGAD-W    TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL.
+           ACCEPT HORA-TOTAL FROM TIME.
+
+001238 INICIAR-SESION.
+           MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-SESION.DAT" TO NOM-SESION-W.
+           GO TO VALIDAR-SESION.
+       FIN-VALIDAR-SESION.
+       
+001303 ABRIR-USUARIO.
+006910     INITIALIZE OTR-STAT.
+006920     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+006930
+006940     OPEN INPUT ARCHIVO-USUNET
+006950     EVALUATE OTR-STAT
+006960       WHEN "00"  CONTINUE
+006970       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+006980                  INITIALIZE REG-USUNET
+006990                  WRITE REG-USUNET
+007000                  CLOSE ARCHIVO-USUNET
+007010                  MOVE "SC-2"                       TO MSJ1-HTML
+007020                  MOVE "Falta configurar usuarios"  TO MSJ2-HTML
+007030                  MOVE "SER853"                     TO MSJ3-HTML
+007040                  GO TO ENVIAR2-ERROR
+007050      WHEN OTHER GO TO CERRAR-SESION
+007060     END-EVALUATE.
+
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+           IF NOMBRE-USUNET = SPACES
+007220     OR NIT-USUNET = ZEROS
+007230        MOVE "SC-2"      TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios" TO MSJ2-HTML
+007250        MOVE "SER853"    TO MSJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+
+       ASIGNAR-NOMBRES.
+           INITIALIZE NOM-UNSER-LNK
+                      NOM-COSTO-LNK
+                      NOM-USUAR-LNK
+
+           MOVE "\\" TO NOM-USUAR-LNK
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+
+           INSPECT NOM-USUAR-LNK REPLACING FIRST "                    "
+                                             BY IP-DATOS-USUNET
+
+           INSPECT NOM-USUAR-LNK REPLACING FIRST " "
+                                             BY "\"
+
+           INSPECT NOM-USUAR-LNK REPLACING FIRST  "                              "
+                                               BY DIRECTORIO-LLEGAD-W.
+
+           MOVE NOM-USUAR-LNK TO NOM-COSTO-LNK NOM-UNSER-LNK
+
+           INSPECT NOM-UNSER-LNK  REPLACING FIRST "                     "
+                                              BY "\CONTROL\SC-UNSER.DAT".
+
+           INSPECT NOM-COSTO-LNK REPLACING FIRST "                       "
+                                              BY "\CONTROL\SC-ARCHCOS.DAT".
+           
+       CREAR-UNIDADES-SERVICIO.
+           OPEN OUTPUT ARCHIVO-UNID-SERV 
+007610     INITIALIZE REG-UNID-SERV.
+
+           MOVE 01 TO CODIGO-UNID-SERV.
+           MOVE "URGENCIAS             " TO DESCRIP-UNID-SERV
+
+           MOVE "N" TO ACTIVAR-SERV
+           WRITE REG-UNID-SERV END-WRITE
+           
+           MOVE 02 TO CODIGO-UNID-SERV.
+           MOVE "CONSULTA EXTERNA      " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 03 TO CODIGO-UNID-SERV.
+           MOVE "HOSPITALIZACION       " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 04 TO CODIGO-UNID-SERV.
+           MOVE "CIRUGIA               " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 05 TO CODIGO-UNID-SERV.
+           MOVE "OBSERVACION           " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 06 TO CODIGO-UNID-SERV.
+           MOVE "ACTIV. EXTRAMULALES   " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 07 TO CODIGO-UNID-SERV.
+           MOVE "CONSULTA PRIORITARIA  " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 08 TO CODIGO-UNID-SERV.
+           MOVE "PROMOCION Y PREVENCION" TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 09 TO CODIGO-UNID-SERV.
+           IF NIT-USU = 900565371
+               MOVE "HOGAR DE PASO     "  TO DESCRIP-UNID-SERV
+           ELSE
+               MOVE "HOSPICASA         " TO DESCRIP-UNID-SERV
+           END-IF.
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 11 TO CODIGO-UNID-SERV.
+           MOVE "UCI NEONATAL CRITICO  " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 12 TO CODIGO-UNID-SERV.
+           MOVE "UCI NEONATAL INTERMEDIO" TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 13 TO CODIGO-UNID-SERV.
+           MOVE "UCI NEONATAL BASICA    " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 21 TO CODIGO-UNID-SERV.
+           MOVE "UCI PEDIATRICA INTERMED" TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 22 TO CODIGO-UNID-SERV.
+           MOVE "UCI PEDIATRICA INTERMED" TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 31 TO CODIGO-UNID-SERV.
+           MOVE "UCI ADULTO CRITICA     " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+
+           MOVE 32 TO CODIGO-UNID-SERV.
+           MOVE "UCI ADULTO INTERMEDIA  " TO DESCRIP-UNID-SERV
+		     WRITE REG-UNID-SERV END-WRITE
+
+		     MOVE 51 TO CODIGO-UNID-SERV.
+           MOVE "UNIDAD DE SALUD MENTAL " TO DESCRIP-UNID-SERV
+           WRITE REG-UNID-SERV END-WRITE
+           CLOSE ARCHIVO-UNID-SERV
+
+
+           OPEN INPUT ARCHIVO-UNID-SERV  
+007620     MOVE "{*UNSERV*:[" TO  DATOS-PLANO-W 
+007630     INSPECT DATOS-PLANO-W  REPLACING ALL "*" BY CARAC-COMILLA
+           PERFORM DATOS-ENVIO
+007650     MOVE 0 TO SW-FIN.
+007660
+007670 LEER-UNIDADES-SERVICIO.
+007680     IF SW-FIN = 0
+              MOVE 1 TO SW-FIN
+           ELSE
+              MOVE LIN-1 TO DATOS-PLANO-W
+              PERFORM DATOS-ENVIO
+           END-IF
+           READ ARCHIVO-UNID-SERV NEXT WITH NO LOCK AT END
+                GO TO CERRAR-GRUPO-UNSERV
+           END-READ.
+
+           IF CODIGO-UNID-SERV = SPACES OR LOW-VALUES
+              MOVE 0 TO SW-FIN
+           ELSE
+              IF CODIGO-UNID-SERV = COD-UNSERV-J
+                 MOVE 0 TO SW-FIN 
+              ELSE
+                 ADD 1 TO CONT 
+                 INITIALIZE LIN-1
+                 MOVE CODIGO-UNID-SERV   TO COD-UNSERV-J 
+                 MOVE DESCRIP-UNID-SERV  TO DESCRIP-UNSERV-J
+                 MOVE UND-EDAD-MIN-SERV  TO UNIDEDADMIN-UNSERV-J
+                 MOVE VLR-EDAD-MIN-SERV  TO EDADMIN-UNSERV-J
+                 MOVE UND-EDAD-MAX-SERV  TO UNIDEDADMAX-UNSERV-J
+                 MOVE NIT-USU            TO NIT-UNSERV-J
+                 MOVE VLR-EDAD-MAX-SERV  TO EDADMAX-UNSERV-J
+                 MOVE C-COSTO-SERV       TO CENCOS-UNSERV-J
+                 IF ACTIVAR-SERV = "S"
+                    MOVE "ACTIVA" TO ACTIVAR-UNSERV-J
+                 ELSE 
+                    MOVE "INACTIVA" TO ACTIVAR-UNSERV-J
+                 END-IF
+           
+                 INSPECT DESCRIP-UNSERV-J REPLACING ALL '"'  BY " "
+                 INSPECT DESCRIP-UNSERV-J REPLACING ALL "*"  BY " "
+                 INSPECT DESCRIP-UNSERV-J REPLACING ALL "Ñ"  BY CARAC-ENE-MAY
+                 INSPECT DESCRIP-UNSERV-J REPLACING ALL "ñ"  BY CARAC-ENE-MIN
+
+                 INSPECT LIN-1 REPLACING ALL "*" BY CARAC-COMILLA
+                 INSPECT LIN-1 REPLACING ALL LOW-VALUES BY SPACES
+                 MOVE ","               TO CIERRE-LIN-1
+              END-IF   
+           END-IF   
+           GO TO LEER-UNIDADES-SERVICIO.
+
+       CERRAR-GRUPO-UNSERV.
+           INITIALIZE LIN-1
+           MOVE LIN-1 TO DATOS-PLANO-W
+           INSPECT LIN-1 REPLACING ALL "*" BY CARAC-COMILLA
+           PERFORM DATOS-ENVIO
+
+           MOVE "]}" TO DATOS-PLANO-W
+           PERFORM DATOS-ENVIO
+           CLOSE ARCHIVO-UNID-SERV.
+           
+       
+
+
+010700 PAGINA-CONFIG.
+010720     MOVE "statuscode" TO COBW3-CNV-NAME
+010730     MOVE "00"         TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV" USING COBW3
+
+010720     MOVE "programa-id" TO COBW3-CNV-NAME
+010730     MOVE "SER873"      TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV" USING COBW3
+
+010760     MOVE "..\PAGINAS\RECIBIDOSLISTADO.ASPX" TO SALIDA-HTML
+010770     PERFORM ABRIR-HTML.
+
+007990 CERRAR-SESION.
+008000     CALL "COBW3_FREE" USING COBW3.
+008010     MOVE 1 TO PROGRAM-STATUS.
+008020     EXIT PROGRAM.
+
+       VENTANA-OTROS-DATOS.
+
+
+       DATOS-ENVIO.
+010720     MOVE "datosrecibidos"   TO COBW3-CNV-NAME
+010730     MOVE DATOS-PLANO-W      TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_REPEAT" USING COBW3.  
+
+008040 COPY "..\..\FUENTES\SC-WEB19.CBL".

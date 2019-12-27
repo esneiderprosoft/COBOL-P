@@ -1,0 +1,7 @@
+LIBRARY HC522
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

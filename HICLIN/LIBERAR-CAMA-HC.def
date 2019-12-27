@@ -1,0 +1,7 @@
+LIBRARY LIBERAR-CAMA-HC
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

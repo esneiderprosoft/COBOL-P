@@ -1,0 +1,6 @@
+LIBRARY INV109-01
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

@@ -1,0 +1,7 @@
+LIBRARY MENUHIS-2
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,6 @@
+LIBRARY RX-421W-02
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

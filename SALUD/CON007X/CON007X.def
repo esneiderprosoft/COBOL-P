@@ -1,0 +1,7 @@
+LIBRARY CON007X
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

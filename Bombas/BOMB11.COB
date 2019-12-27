@@ -1,0 +1,544 @@
+000012* BOMBAS - CONSULTA ULTIMO NUMERO DE MOVIMIENTO DE FACTURA
+000020 IDENTIFICATION DIVISION.
+000021* PROGRAM-ID. "BOMB11".
+000022
+000023 PROGRAM-ID. "HttpExtensionProc".
+000024 ENVIRONMENT DIVISION.
+000025 CONFIGURATION SECTION.
+000026 INPUT-OUTPUT SECTION.
+000027 FILE-CONTROL.
+000080 COPY "P:\PROG\PROYECT\FUENTES\FS-USUNET.CBL".
+000150 COPY "P:\PROG\PROYECT\FUENTES\FS-SESION.CBL".
+
+
+           SELECT ARCHIVO-USUARIOS LOCK MODE IS AUTOMATIC
+                  ASSIGN TO NOM-USUAR-W
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC;
+                  RECORD KEY IS NOMBRE-USU
+                  ALTERNATE RECORD KEY IS CTL-USU     WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CLAVE-USU   WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CLAVE-2-USU WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+
+    	   SELECT ARCHIVO-PREFIJOS LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-PREF-W
+                  ORGANIZATION IS INDEXED;
+                  ACCESS MODE DYNAMIC;
+                  RECORD KEY  IS LLAVE-PREF
+                  FILE STATUS IS OTR-STAT.
+
+
+           SELECT ARCHIVO-FACTURAS LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-FACT-W
+                  ORGANIZATION INDEXED;
+                  ACCESS MODE DYNAMIC;
+                  RECORD KEY IS LLAVE-FAC
+                  ALTERNATE RECORD KEY IS FECHA-FAC        WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS NIT-FAC          WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS LLAVE-VEND-FAC   WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS VENDEDOR-FAC     WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS PLACA-FAC        WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS TIQ-BASC-FAC     WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS ORD-PEDI-FAC     WITH DUPLICATES
+                  ALTERNATE RECORD KEY IS CIUDAD-FAC       WITH DUPLICATES                  
+                  ALTERNATE RECORD KEY IS NRO-FACT-DEV-FAC WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+
+           SELECT MOVIMIENTO-DIARIO LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-MOV-W
+                  ORGANIZATION IS INDEXED;
+                  ACCESS MODE IS DYNAMIC
+                  RECORD KEY IS LLAVE-MOV
+                  ALTERNATE RECORD KEY SECUENCIA-MOV
+                  ALTERNATE RECORD KEY LLAVE-FEC
+                  ALTERNATE RECORD KEY LLAVE-DOC-MOV   WITH DUPLICATES
+                  ALTERNATE RECORD KEY COSTO-MOV       WITH DUPLICATES
+                  ALTERNATE RECORD KEY NRO-ORD-MOV     WITH DUPLICATES
+                  ALTERNATE RECORD KEY LLAVE-LIBRE-MOV WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+
+
+           SELECT REGCONT LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-REGCONT-W
+                  FILE STATUS OTR-STAT.
+
+
+
+000400 DATA DIVISION.
+000410 FILE SECTION.
+000420 COPY "P:\PROG\PROYECT\FUENTES\FD-USUNET.CBL".
+000421 COPY "P:\PROG\PROYECT\FUENTES\FD-SESION.CBL".
+000450 COPY "P:\PROG\PROYECT\FUENTES\FD-USUAR.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-PREFI.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-FACTURA.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-MOVIM.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-FECHA.CBL".
+
+
+000540 WORKING-STORAGE  SECTION.
+000550 COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
+000560 COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC.CBL".
+
+000570 01 NOM-USUAR-W            PIC X(70).
+       01 NOM-COMBU-W            PIC X(70).
+       01 NOM-PREF-W             PIC X(70).
+       01 NOM-FACT-W             PIC X(70).
+       01 NOM-REGCONT-W          PIC X(70).
+       01 NOM-FAC-EDIT           PIC X(30).
+       01 NOM-MOV-EDIT           PIC X(20).
+       01 SUC-W                  PIC 9.
+       01 MES-MAX                PIC 99.
+       01 DIA-MAX                PIC 99.
+
+       01 CTA-DEUD.
+          02 MAY-DEUD            PIC X(4).
+          02 SCTA-DEUD           PIC XX.
+          02 AUXIL-W.
+             03 AUX1-W           PIC X(4).
+             03 SUCURSAL-W       PIC X.
+
+       01  FECHA-ACT-S.
+           02 ANO-FULL-ACT.
+              03 SIG-ACT         PIC 99.
+              03 ANO-ACT         PIC 99.
+           02 MES-ACT            PIC 99.
+           02 DIA-ACT            PIC 99.
+
+       01 FECHA-CTL.
+          02 ANO-CTL             PIC 99.
+          02 MES-CTL             PIC 99.
+          02 DIA-CTL             PIC 99.
+
+       01 FECHA-INI.
+          02 ANO-INI             PIC 99.
+          02 MES-INI             PIC 99.
+          02 DIA-INI             PIC 99.
+
+       01 FECHA-FIN.
+          02 ANO-FIN             PIC 99.
+          02 MES-FIN             PIC 99.
+          02 DIA-FIN             PIC 99.
+
+       01 NOMBRE-LNK             PIC X(30).
+       01 DIRECTORIO-W           PIC X(35).
+       01 INVALID-007            PIC X(80).
+       01 DATO-ULT-MOV-LNK.
+          02 LOTE-ULT-MOV-LNK.
+             03 LOTE1-ULT-MOV-LNK PIC X.
+             03 LOTE2-ULT-MOV-LNK PIC X.
+             03 LOTE3-ULT-MOV-LNK PIC X.
+          02 NRO-ULT-COMP-LNK.
+             03 NRO1-ULT-COMP-LNK PIC 9(3).
+             03 NRO2-ULT-COMP-LNK PIC 9(6).
+          02 FECHA-ULT-MOV-LNK.
+             03 ANO-ULT-MOV-LNK  PIC 99.
+             03 MES-ULT-MOV-LNK  PIC 99.
+             03 DIA-ULT-MOV-LNK  PIC 99.
+
+       01 SW-INVALID-W           PIC 99.
+       01 MENSAJE-W              PIC X(70).
+
+       01  ULT-FECHA-NUM.
+           03 ULT-ANO-NUM        PIC 99.
+           03 ULT-MES-NUM        PIC 99.
+           03 ULT-DIA-NUM        PIC 99. 
+
+       01 LINEA-LLEGAD-W             PIC X(100).
+
+       01 DATO-LLEGADA-W.
+          02 SESION-LLEGAD-W        PIC X(29).
+          02 DIRECTORIO-LLEGAD-W    PIC X(30).
+          02 CARPTA-LLEGAD-W        PIC X(9).
+
+       01 DATOS-ENVIO.
+          02 DAT0-ENV            PIC XX.
+          02 FILLER              PIC X VALUE "|".
+          02 DAT1-ENV            PIC X(6).
+          02 FILLER              PIC X VALUE "|".
+          02 DAT2-ENV            PIC X(6).
+          02 FILLER              PIC X VALUE "|".
+          02 DAT3-ENV            PIC X.
+          02 FILLER              PIC X VALUE "|".
+          02 DAT4-ENV            PIC X.
+          02 FILLER              PIC X VALUE "|".
+          02 DAT5-ENV            PIC X(6).
+
+
+
+000791 LINKAGE SECTION.
+000792 COPY "P:\PROG\PROYECT\FUENTES\ISAPICTX.CBL".
+000793
+000794 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+000795
+000810 DECLARATIVES.
+000811 I-O-TEST SECTION.
+000812     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+000813 ESCR-EXCEPTIONES.
+000814     IF OTR-STAT = "00"
+000815        CONTINUE 
+000816     ELSE
+000817        MOVE OTR-STAT                TO MSJ1-HTML
+000818        MOVE NOM-USU-W               TO MSJ2-HTML
+000819        MOVE "BOMB11"                TO MSJ3-HTML
+000820        GO TO ENVIAR2-ERROR
+000821     END-IF.
+001030
+001040 I-O-TEST SECTION.
+001050     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.         
+001060 ESCR-EXCEPTIONES.
+001070     IF OTR-STAT = "00"
+001080        CONTINUE
+001090     ELSE
+001100        MOVE OTR-STAT                TO MSJ1-HTML
+001101        MOVE NOM-SESION-W            TO MSJ2-HTML
+001102        MOVE "BOMB11"                TO MSJ3-HTML
+001103        GO TO ENVIAR2-ERROR
+001104     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUARIOS.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00" 
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-USUAR-W      TO MSJ2-HTML
+006680        MOVE "BOMB11"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-PREFIJOS.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00" 
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-PREF-W       TO MSJ2-HTML
+006680        MOVE "BOMB11"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-FACTURAS.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00" 
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-FACT-W       TO MSJ2-HTML
+006680        MOVE "BOMB11"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON REGCONT.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00" 
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-REGCONT-W    TO MSJ2-HTML
+006680        MOVE "BOMB11"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+001105
+001150 END DECLARATIVES.
+001160
+001161 INICIAR-IIS.
+001162     MOVE LOW-VALUE TO COBW3.
+001163     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+001164     CALL "COBW3_INIT" USING COBW3.
+001220
+001221 LEER-DATO-HTML.
+001852     MOVE "datosh" TO COBW3-SEARCH-DATA.
+001853     CALL "COBW3_GET_VALUE" USING COBW3.
+001854     MOVE COBW3-GET-DATA    TO LINEA-LLEGAD-W.
+
+           INITIALIZE DATO-LLEGADA-W
+
+           UNSTRING LINEA-LLEGAD-W DELIMITED BY "|"
+              INTO SESION-LLEGAD-W, DIRECTORIO-LLEGAD-W, CARPTA-LLEGAD-W
+           END-UNSTRING.
+
+001855     MOVE SESION-LLEGAD-W    TO LLAVE-SESION-W.
+
+001238 INICIAR-SESION.
+001245     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-SESION.DAT" TO NOM-SESION-W
+001246
+000820     MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL.
+000830     ACCEPT HORA-TOTAL FROM TIME.
+000810     GO TO VALIDAR-SESION.
+000850
+000860 FIN-VALIDAR-SESION.
+
+001303 ABRIR-USUARIO.
+001304     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+001305
+001306     OPEN INPUT ARCHIVO-USUNET
+001307     EVALUATE OTR-STAT
+001308       WHEN "00"  CONTINUE
+001309       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+001310                  CLOSE       ARCHIVO-USUNET
+001311                  OPEN I-O    ARCHIVO-USUNET
+001312                  INITIALIZE REG-USUNET
+001314                  WRITE REG-USUNET
+001315                  CLOSE       ARCHIVO-USUNET
+001316                  MOVE "Validacion de usuarios"      TO MSJ1-HTML
+001317                  MOVE "Falta configurar usuario"    TO MSJ2-HTML
+001318                  MOVE "Sc"                          TO MSJ3-HTML
+001319                  GO TO ENVIAR2-ERROR
+001320       WHEN OTHER GO TO CERRAR-SESION
+001321     END-EVALUATE.
+001322
+001332     INITIALIZE REG-USUNET.
+
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007130
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+007210     IF NOMBRE-USUNET = SPACES
+007220     OR NIT-USUNET = ZEROS
+007230        MOVE "Validacion de Sesion"        TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007250        MOVE "Sc"                          TO MSJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+
+       INICIAR-RESTRICION.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-ACT-S
+           ACCEPT ULT-FECHA-NUM FROM DATE.
+
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+001614     INITIALIZE NOM-USUAR-W NOM-COMBU-W NOMBRE-LNK DIRECTORIO-W NOM-REGCONT-W
+001615     MOVE "\\" TO NOM-USUAR-W
+001616
+001617     INSPECT NOM-USUAR-W REPLACING FIRST "                    "
+001618                                    BY IP-DATOS-USUNET
+001621     INSPECT NOM-USUAR-W REPLACING FIRST " "
+001624                                     BY "\"
+007292     INSPECT NOM-USUAR-W REPLACING FIRST "                              "
+007293                                     BY DIRECTORIO-LLEGAD-W
+
+           MOVE NOM-USUAR-W  TO  NOM-COMBU-W NOM-PREF-W NOM-FACT-W NOM-REGCONT-W
+
+007190     INSPECT NOM-USUAR-W   REPLACING FIRST "                       "
+007200                                        BY "\CONTROL\SC-ARCHUSU.DAT".
+
+           INSPECT NOM-COMBU-W REPLACING FIRST "                       "
+                                            BY "\CONTROL\SC-ARCOMBU.DAT".
+
+           INSPECT NOM-PREF-W REPLACING FIRST "                        "
+                                           BY "\CONTROL\SC-ARCHPREF.DAT".
+
+
+           INSPECT NOM-REGCONT-W REPLACING FIRST "         "
+                                              BY CARPTA-LLEGAD-W
+
+           INSPECT NOM-REGCONT-W REPLACING FIRST "              "
+                                              BY "SC-REGCONT.DAT".
+
+
+           MOVE "\\" TO NOMBRE-LNK.
+           INSPECT  NOMBRE-LNK  REPLACING FIRST "                    "
+                                             BY IP-DATOS-USUNET.
+
+           INSPECT DIRECTORIO-W REPLACING FIRST " "
+                                             BY "\"
+     
+           INSPECT DIRECTORIO-W REPLACING FIRST "                              "
+007293                                     BY DIRECTORIO-LLEGAD-W.
+
+
+
+       LEER-FECHA.
+           OPEN INPUT REGCONT
+           READ REGCONT NEXT WITH NO LOCK AT END 
+                CLOSE REGCONT
+           END-READ.
+
+       LEER-USUARIO.
+
+           OPEN INPUT ARCHIVO-USUARIOS
+           READ ARCHIVO-USUARIOS NEXT WITH NO LOCK AT END 
+                CLOSE ARCHIVO-USUARIOS
+           END-READ.
+
+           EVALUATE PUC-USU
+               WHEN 1 MOVE "13050500001" TO CTA-DEUD
+               WHEN 2 MOVE "15050500001" TO CTA-DEUD
+               WHEN 4 MOVE "14700500001" TO CTA-DEUD
+           END-EVALUATE.
+
+       ABRIR-PREFIJOS.
+           OPEN INPUT ARCHIVO-PREFIJOS.
+           EVALUATE OTR-STAT
+               WHEN "00"  READ ARCHIVO-PREFIJOS NEXT WITH NO LOCK AT END 
+                               MOVE 0 TO SW-FIN
+                          END-READ
+                          IF COD-PREF (8) = SPACES
+                             CLOSE       ARCHIVO-PREFIJOS
+                             OPEN OUTPUT ARCHIVO-PREFIJOS
+                             MOVE "GS"           TO COD-PREF     (8)
+                             MOVE "Combustibles" TO DESCRIP-PREF (8)
+                             MOVE SPACES         TO RESOL-PREF   (8)
+                             WRITE REG-PREF
+                          END-IF
+                          CLOSE ARCHIVO-PREFIJOS
+               WHEN "35"  INITIALIZE REG-PREF
+                          MOVE 1 TO DEF-PREF
+                          MOVE PREFIJO-USU    TO COD-PREF     (1)
+                          MOVE "Principal"    TO DESCRIP-PREF (1)
+                          MOVE RESOL-DIAN-USU TO RESOL-PREF   (1)
+                          MOVE "GS"           TO COD-PREF     (8)
+                          MOVE "Combustibles" TO DESCRIP-PREF (8)
+                          MOVE SPACES         TO RESOL-PREF   (8)
+                          OPEN OUTPUT ARCHIVO-PREFIJOS
+                          WRITE REG-PREF
+                          CLOSE       ARCHIVO-PREFIJOS
+                          GO TO ABRIR-PREFIJOS
+               WHEN OTHER GO TO CERRAR-SESION
+           END-EVALUATE.
+
+           IF DEF-PREF = SPACES OR ZERO
+              MOVE 1 TO DEF-PREF
+           END-IF.
+
+
+       DATO-SUCURSAL.
+
+           IF NOMBRE-ALTERNO = SPACES OR NOMBRE-ALTERNO = NOMBRE-USU
+              MOVE 1 TO SUCURSAL-W
+           END-IF.
+
+           IF SUCURSAL-W = 1
+              CONTINUE 
+           ELSE
+              MOVE 2 TO DEF-PREF
+           END-IF.
+
+        ABRIR-FACTURAS.
+           IF DEF-PREF > 1
+              MOVE 7 TO SUC-W
+              MOVE "\CONTROL\SC-ARCHFACT-07.DAT" TO NOM-FAC-EDIT
+           ELSE
+              MOVE 8 TO SUC-W
+              MOVE "\CONTROL\SC-ARCHFACT-08.DAT" TO NOM-FAC-EDIT
+           END-IF.
+
+           INSPECT NOM-FACT-W REPLACING FIRST "                              "
+                                           BY NOM-FAC-EDIT.
+
+           OPEN INPUT ARCHIVO-FACTURAS.
+           EVALUATE OTR-STAT
+               WHEN "00"  CONTINUE
+               WHEN "35"  OPEN OUTPUT ARCHIVO-FACTURAS
+                          CLOSE       ARCHIVO-FACTURAS
+                          GO TO ABRIR-FACTURAS
+               WHEN OTHER GO TO CERRAR-SESION
+           END-EVALUATE.
+
+
+        BUSCAR-NUMERO.
+
+           IF DEF-PREF > 1
+              MOVE 7      TO LOTE3-ULT-MOV-LNK
+           ELSE
+              MOVE 8      TO LOTE3-ULT-MOV-LNK
+           END-IF.
+           MOVE "F"       TO LOTE1-ULT-MOV-LNK
+           MOVE "0"       TO LOTE2-ULT-MOV-LNK
+
+           MOVE ULT-FECHA-NUM TO FECHA-ULT-MOV-LNK
+           
+
+           CALL "CON007" USING NOMBRE-LNK DIRECTORIO-W INVALID-007 DATO-ULT-MOV-LNK SW-INVALID-W MENSAJE-W
+
+           IF INVALID-007 > 0
+              MOVE INVALID-007             TO MSJ1-HTML
+              MOVE MENSAJE-W               TO MSJ2-HTML
+              MOVE DIRECTORIO-W            TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+
+       COMPROBAR-FACTURAS.
+           MOVE NRO2-ULT-COMP-LNK TO NRO-FAC
+           READ ARCHIVO-FACTURAS WITH NO LOCK 
+                INVALID KEY 
+                        CLOSE ARCHIVO-FACTURAS
+                NOT INVALID KEY
+                        ADD 1 TO NRO2-ULT-COMP-LNK
+                        GO TO COMPROBAR-FACTURAS
+           END-READ.
+
+
+           IF ANO-VENCE-MOV = 00 OR SPACES
+              MOVE ANO-NUM TO ANO-INI
+              MOVE MES-NUM TO MES-INI
+              IF DIA-INI IS ZERO
+                 MOVE 1 TO DIA-INI
+              END-IF
+           ELSE
+              MOVE FECHA-VENCE-MOV TO FECHA-INI
+              IF  MES-INI = 12 AND DIA-INI = 31
+                  CONTINUE
+              ELSE
+                 MOVE MES-INI         TO MES-MAX
+                 PERFORM BUSCAR-DIA-MAX
+                 ADD 1 TO DIA-INI
+                 IF DIA-INI > DIA-MAX
+                    ADD  1 TO MES-INI
+                    MOVE 1 TO DIA-INI
+                 END-IF
+              END-IF
+           END-IF.
+
+           MOVE ANO-NUM TO ANO-INI ANO-FIN
+
+           MOVE 00          TO DAT0-ENV
+           MOVE FECHA-INI   TO DAT1-ENV
+           MOVE NRO-FAC     TO DAT2-ENV
+           MOVE SUCURSAL-W  TO DAT3-ENV
+           MOVE DEF-PREF    TO DAT4-ENV
+           MOVE FECHA-NUM   TO DAT5-ENV.
+
+002147 ENVIO-DATOS.
+004378     MOVE "datosrecibidos"  TO COBW3-CNV-NAME
+004393     MOVE DATOS-ENVIO  TO COBW3-CNV-VALUE
+004403     CALL "COBW3_SET_CNV"   USING COBW3
+004413     MOVE "../PAGINAS/RECIBIDOS.ASPX"  TO SALIDA-HTML
+004430     PERFORM ABRIR-HTML.
+
+002545 CERRAR-SESION.
+002546     CALL "COBW3_FREE" USING COBW3.
+002547     MOVE 1 TO PROGRAM-STATUS.
+002548     EXIT PROGRAM.
+
+
+       BUSCAR-DIA-MAX.
+           EVALUATE MES-MAX
+               WHEN 01 MOVE 31 TO DIA-MAX
+               WHEN 02 MOVE 28 TO DIA-MAX
+               WHEN 03 MOVE 31 TO DIA-MAX
+               WHEN 04 MOVE 30 TO DIA-MAX
+               WHEN 05 MOVE 31 TO DIA-MAX
+               WHEN 06 MOVE 30 TO DIA-MAX
+               WHEN 07 MOVE 31 TO DIA-MAX
+               WHEN 08 MOVE 31 TO DIA-MAX
+               WHEN 09 MOVE 30 TO DIA-MAX
+               WHEN 10 MOVE 31 TO DIA-MAX
+               WHEN 11 MOVE 30 TO DIA-MAX
+               WHEN 12 MOVE 31 TO DIA-MAX
+           END-EVALUATE.
+ 
+
+002566 COPY "P:\PROG\PROYECT\FUENTES\SC-WEB.CBL".
+002567
+

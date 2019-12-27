@@ -1,0 +1,7 @@
+LIBRARY SER835MO
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

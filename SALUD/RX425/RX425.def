@@ -1,0 +1,7 @@
+LIBRARY RX425
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

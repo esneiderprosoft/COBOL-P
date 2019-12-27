@@ -1,0 +1,7 @@
+LIBRARY HC811
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,384 @@
+      *=================================================================
+      * GRABA EL ULTIMO NUMERO DE UNA SECUENCIA - CON007X
+      *=================================================================
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. "HttpExtensionProc".
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.                                     
+       COPY "..\..\FUENTES\FS-USUNET.CBL".
+       COPY "..\..\FUENTES\FS-SESION.CBL".  
+
+           SELECT MOVIMIENTO-DIARIO LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-MOV-W 
+                  ORGANIZATION IS INDEXED;
+                  ACCESS MODE IS DYNAMIC
+                  RECORD KEY IS LLAVE-MOV
+                  ALTERNATE RECORD KEY SECUENCIA-MOV
+                  ALTERNATE RECORD KEY LLAVE-FEC
+                  ALTERNATE RECORD KEY LLAVE-DOC-MOV   WITH DUPLICATES
+                  ALTERNATE RECORD KEY COSTO-MOV       WITH DUPLICATES
+                  ALTERNATE RECORD KEY NRO-ORD-MOV     WITH DUPLICATES
+                  ALTERNATE RECORD KEY LLAVE-LIBRE-MOV WITH DUPLICATES
+                  FILE STATUS IS OTR-STAT.
+
+           SELECT ARCHIVO-LOTES LOCK MODE IS AUTOMATIC
+	            ASSIGN NOM-LOTES-W
+                    ORGANIZATION IS INDEXED;
+                    ACCESS MODE  IS DYNAMIC
+                    RECORD KEY   IS COD-LOTE
+                    ALTERNATE RECORD KEY IS NOMBRE-LOTE WITH DUPLICATES
+                    FILE STATUS IS OTR-STAT.
+
+       DATA DIVISION.
+       FILE SECTION.
+       COPY "..\..\FUENTES\FD-USUNET.CBL".
+       COPY "..\..\FUENTES\FD-SESION.CBL".
+       COPY "..\..\FUENTES\FD-MOVIM.CBL".
+       COPY "..\..\FUENTES\FD-LOTES.CBL".
+
+       WORKING-STORAGE SECTION.
+       COPY "..\..\FUENTES\COBW3.CBL".
+       COPY "..\..\FUENTES\WEB-CARAC.CBL".
+    
+       77 NOM-LOTES-W                  PIC X(70).
+       77 NOM-MOV-W                    PIC X(70).
+       77 MES-SAL-W                    PIC X(4).
+
+       01 LLEGADA-W                    PIC X(100).
+      
+       01 DATO-LLEGADA-W.
+          02 LLAVE-SESION-LLEGA-W.
+             03 ID-LLEGAD-W            PIC X(15).
+             03 FECHA-LLEGAD-W         PIC X(8).
+             03 HORA-LLEGAD-W          PIC X(6).
+          02 DIR-CONTAB-LLEGADA-W      PIC X(30).
+          02 MES-CONTAB-LLEGADA-W      PIC XX.
+          02 SECU-LLEGADA-W            PIC XX.
+          02 NRO-LLEGADA-W             PIC 9(6).           
+          02 FECHA-CRE-LLEGADA-W       PIC 9(6).
+          02 OPERADOR-LLEGADA-W        PIC X(4).
+
+       01 SECU-EDIT.
+          02 SEC1-EDIT                 PIC 9.
+          02 SEC2-EDIT                 PIC XX.
+
+       01 DATOS-ENVIO.
+          02 SW-INVALID-ENV            PIC X(2).
+          02 FILLER                    PIC X      VALUE "|".
+          02 REFER-MOV-ENV             PIC X(6).
+          02 FILLER                    PIC X      VALUE "|".
+          02 DETALLE-MOV-ENV           PIC X(50).
+
+       LINKAGE SECTION.
+
+       COPY "..\..\FUENTES\ISAPICTX.CBL".
+       PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+      
+       DECLARATIVES.
+
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE 
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-USU-W                TO MSJ2-HTML
+              MOVE "CON007X"                TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.       
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.         
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-SESION-W             TO MSJ2-HTML
+              MOVE "CON007X"                TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON MOVIMIENTO-DIARIO.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE 
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-MOV-W                TO MSJ2-HTML
+              MOVE "CON007X"                TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-LOTES.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-LOTES-W              TO MSJ2-HTML
+              MOVE "CON007X"                TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+       END DECLARATIVES.
+       
+       INICIAR-IIS.
+           MOVE LOW-VALUE TO COBW3.
+           MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+           CALL "COBW3_INIT" USING COBW3.
+         
+       LEER-DATO-HTML.
+           MOVE "datosh" TO COBW3-SEARCH-DATA.
+           CALL "COBW3_GET_VALUE" USING COBW3.
+           MOVE COBW3-GET-DATA    TO LLEGADA-W.
+
+           UNSTRING LLEGADA-W DELIMITED BY "|"
+              INTO LLAVE-SESION-LLEGA-W, DIR-CONTAB-LLEGADA-W, MES-CONTAB-LLEGADA-W, 
+                   SECU-LLEGADA-W, NRO-LLEGADA-W, FECHA-CRE-LLEGADA-W, OPERADOR-LLEGADA-W
+           END-UNSTRING.
+
+           MOVE LLAVE-SESION-LLEGA-W    TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL.
+           ACCEPT HORA-TOTAL FROM TIME.
+
+       INICIAR-SESION.
+           MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-SESION.DAT" TO NOM-SESION-W
+          
+           GO TO VALIDAR-SESION.
+
+       FIN-VALIDAR-SESION.
+
+       ABRIR-USUARIO.
+           INITIALIZE OTR-STAT
+           MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+      
+           OPEN INPUT ARCHIVO-USUNET
+      
+           INITIALIZE LLAVE-USUNET.
+
+       LEER-USUARIO.           
+           READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+           CLOSE ARCHIVO-USUNET.
+      
+           IF NOMBRE-USUNET = SPACES
+              MOVE "Validacion de usuarios"      TO MSJ1-HTML
+              MOVE "Falta configurar usuario"    TO MSJ2-HTML
+              MOVE "Sc"                          TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+       ASIGNAR-NOMBRES.
+
+           EVALUATE MES-CONTAB-LLEGADA-W
+             WHEN 01 MOVE "\ENE" TO MES-SAL-W 
+             WHEN 02 MOVE "\FEB" TO MES-SAL-W 
+             WHEN 03 MOVE "\MAR" TO MES-SAL-W 
+             WHEN 04 MOVE "\ABR" TO MES-SAL-W 
+             WHEN 05 MOVE "\MAY" TO MES-SAL-W 
+             WHEN 06 MOVE "\JUN" TO MES-SAL-W 
+             WHEN 07 MOVE "\JUL" TO MES-SAL-W 
+             WHEN 08 MOVE "\AGT" TO MES-SAL-W 
+             WHEN 09 MOVE "\SEP" TO MES-SAL-W 
+             WHEN 10 MOVE "\OCT" TO MES-SAL-W 
+             WHEN 11 MOVE "\NOV" TO MES-SAL-W 
+             WHEN 12 MOVE "\DIC" TO MES-SAL-W 
+           END-EVALUATE
+
+           INITIALIZE NOM-LOTES-W 
+                      NOM-MOV-W.
+
+           MOVE "\\" TO NOM-LOTES-W
+
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+
+           INSPECT NOM-LOTES-W REPLACING FIRST "                    "
+                                            BY IP-DATOS-USUNET
+           INSPECT NOM-LOTES-W REPLACING FIRST " "
+                                            BY "\"
+           INSPECT NOM-LOTES-W REPLACING FIRST "                          "
+                                            BY "PROG\DATOS\SC-ARCHLOTE.DAT".
+       ABRIR-ARCHIVO-LOTES.
+           OPEN INPUT ARCHIVO-LOTES
+           MOVE SECU-LLEGADA-W  TO COD-LOTE
+           READ ARCHIVO-LOTES WITH NO LOCK
+                INVALID KEY  
+                  MOVE 1 TO CONSEC-LOTE
+           END-READ           
+           CLOSE ARCHIVO-LOTES.
+           
+           IF CONSEC-LOTE = 1
+              MOVE "\\"  TO NOM-MOV-W
+              INSPECT NOM-MOV-W REPLACING FIRST "                    "
+                                             BY IP-DATOS-USUNET
+              INSPECT NOM-MOV-W REPLACING FIRST " "
+                                             BY "\"
+              INSPECT NOM-MOV-W REPLACING FIRST "                              "
+                                             BY DIR-CONTAB-LLEGADA-W
+              INSPECT NOM-MOV-W REPLACING FIRST "                       "
+                                             BY "\CONTROL\SC-ARCHMOV.DAT"
+           ELSE
+              MOVE "\\"  TO NOM-MOV-W
+              INSPECT NOM-MOV-W REPLACING FIRST "                    "
+                                             BY IP-DATOS-USUNET
+              INSPECT NOM-MOV-W REPLACING FIRST " "
+                                             BY "\"
+              INSPECT NOM-MOV-W REPLACING FIRST "                              "
+                                             BY DIR-CONTAB-LLEGADA-W
+              INSPECT NOM-MOV-W REPLACING FIRST "    "
+                                             BY MES-SAL-W
+              INSPECT NOM-MOV-W REPLACING FIRST "              "
+                                             BY "SC-ARCHMOV.DAT"
+           END-IF.
+
+       ABRIR-MOVIMIENTO.
+           OPEN I-O MOVIMIENTO-DIARIO.         
+
+       LEER-NUMERACION.
+            INITIALIZE MOV-DIARIO.
+            MOVE "99999999"      TO LLAVE-COMP-MOV.
+            MOVE 0               TO SEC1-EDIT
+            MOVE SECU-LLEGADA-W  TO SEC2-EDIT
+            MOVE SECU-EDIT       TO SECU-MOV. 
+
+            READ MOVIMIENTO-DIARIO RECORD WITH NO LOCK KEY IS SECUENCIA-MOV
+                  INVALID KEY
+                    MOVE NRO-LLEGADA-W        TO REFER-MOV
+                    MOVE FECHA-CRE-LLEGADA-W  TO FECHA-VENCE-MOV
+                    PERFORM EDITAR-DETALLE
+                    WRITE MOV-DIARIO END-WRITE
+                    MOVE "01"                 TO SW-INVALID-ENV
+                  NOT INVALID KEY
+                    MOVE NRO-LLEGADA-W        TO REFER-MOV
+                    IF FECHA-CRE-LLEGADA-W > FECHA-VENCE-MOV
+                    OR ANO-VENCE-MOV = 20
+                    OR ANO-VENCE-MOV > 89
+                    OR MES-VENCE-MOV > 12
+                    OR DIA-VENCE-MOV > 31
+                       MOVE FECHA-CRE-LLEGADA-W  TO FECHA-VENCE-MOV
+                    END-IF
+                    IF DETALLE-MOV = "ULTIMO COMPROBANTE"
+                    OR DETALLE-MOV = SPACES
+                       PERFORM EDITAR-DETALLE
+                    END-IF
+                    REWRITE MOV-DIARIO
+                    MOVE "00"                 TO SW-INVALID-ENV
+           END-READ.
+     
+       CERRAR-ARCHIVOS.
+           MOVE REFER-MOV   TO REFER-MOV-ENV
+           MOVE DETALLE-MOV TO DETALLE-MOV-ENV
+           
+           CLOSE MOVIMIENTO-DIARIO.
+
+     
+       PAGINA-CONFIG.
+           MOVE "datosrecibidos" TO COBW3-CNV-NAME
+           MOVE DATOS-ENVIO      TO COBW3-CNV-VALUE
+           CALL "COBW3_SET_CNV" USING COBW3
+         
+           MOVE "..\PAGINAS\RECIBIDOS.ASPX" TO SALIDA-HTML  
+           PERFORM ABRIR-HTML.
+
+       CERRAR-SESION.
+           CALL "COBW3_FREE" USING COBW3.
+           MOVE 1 TO PROGRAM-STATUS.
+           EXIT PROGRAM.
+
+
+       EDITAR-DETALLE.
+           EVALUATE SECU-LLEGADA-W
+               WHEN "1R" MOVE "RECIBOS DE CAJA PPAL"    TO DETALLE-MOV
+               WHEN "2R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "3R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "4R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "5R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "6R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "7R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "8R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "9R" MOVE "RECIBOS DE CAJA SUC "    TO DETALLE-MOV
+               WHEN "1C" MOVE "COMPROBANTE DE EGRESO"   TO DETALLE-MOV
+               WHEN "2C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "3C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "4C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "5C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "6C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "7C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "8C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "9C" MOVE "COMP. EGRESO SUCURSAL"   TO DETALLE-MOV
+               WHEN "1G" MOVE "NOTA CONTAB PRINCIPAL"   TO DETALLE-MOV
+               WHEN "2G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "3G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "4G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "5G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "6G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "7G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "8G" MOVE "NOTA CONTAB. SUCURSAL"   TO DETALLE-MOV
+               WHEN "1Z" MOVE "NOTAS BANCARIAS PPAL "   TO DETALLE-MOV
+               WHEN "2Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "3Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "4Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "5Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "6Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "7Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "8Z" MOVE "NOTAS BANCARIAS SUCUR"   TO DETALLE-MOV
+               WHEN "9Z" MOVE "NOTAS BANCARIAS SUCUR   " TO DETALLE-MOV
+               WHEN "1F" MOVE "FACTURACION PRINCIPAL   " TO DETALLE-MOV
+               WHEN "2F" MOVE "FACTURACION SUCURSAL 2  " TO DETALLE-MOV
+               WHEN "3F" MOVE "FACTURACION SUCURSAL 3  " TO DETALLE-MOV
+               WHEN "4F" MOVE "FACTURACION SUCURSAL 4  " TO DETALLE-MOV
+               WHEN "5F" MOVE "FACTURACION SUCURSAL 5  " TO DETALLE-MOV
+               WHEN "6F" MOVE "FACTURACION SUCURSAL 6  " TO DETALLE-MOV
+               WHEN "7F" MOVE "FACTURACION SUCURSAL 7  " TO DETALLE-MOV
+               WHEN "8F" MOVE "FACTURACION SUCURSAL 8  " TO DETALLE-MOV
+               WHEN "9F" MOVE "FACTURACION SUCURSAL    " TO DETALLE-MOV
+               WHEN "9P" MOVE "PENDIENTES DE ENTREGA   " TO DETALLE-MOV
+               WHEN "9Q" MOVE "ENTREGA DE PENDIENTES   " TO DETALLE-MOV
+               WHEN "9C" MOVE "COTIZACIONES            " TO DETALLE-MOV
+               WHEN "C1" MOVE "ORDENES PREST. SERVIC   " TO DETALLE-MOV
+               WHEN "C2" MOVE "CONTRATO PREST. SERV.   " TO DETALLE-MOV
+               WHEN "C3" MOVE "CONTRATO SUMINISTRO     " TO DETALLE-MOV
+               WHEN "C4" MOVE "CONTRATO DE OBRA        " TO DETALLE-MOV
+               WHEN "CB" MOVE "CUENTA DE COBRO         " TO DETALLE-MOV
+               WHEN "RP" MOVE "PROG. PRODUCC S/N PED   " TO DETALLE-MOV
+               WHEN "1A" MOVE "CUENTA DE COBRO CARTERA " TO DETALLE-MOV
+               WHEN "RF" MOVE "REMISIONES              " TO DETALLE-MOV
+               WHEN "R1" MOVE "ENTRADA MERCANC. REMIS. " TO DETALLE-MOV
+               WHEN "R2" MOVE "REGISTRO MERCANC. REMIS " TO DETALLE-MOV
+               WHEN "RE" MOVE "CARTERA RED EXTERNA     " TO DETALLE-MOV
+               WHEN "70" MOVE "AUT. SERV. DROG. 9A1    " TO DETALLE-MOV
+               WHEN "71" MOVE "AUT. SERV. CIRU. 9A1    " TO DETALLE-MOV
+               WHEN "72" MOVE "AUT. SERV. LABO. 9A1    " TO DETALLE-MOV
+               WHEN "73" MOVE "AUT. SERV. IMAG. 9A1    " TO DETALLE-MOV
+               WHEN "74" MOVE "AUT. SERV. OTROS 9A1    " TO DETALLE-MOV
+               WHEN "75" MOVE "AUT. SERV. CONS. 9A1    " TO DETALLE-MOV
+               WHEN "77" MOVE "AUT. SERV. P Y P 9A1    " TO DETALLE-MOV
+               WHEN "80" MOVE "COMPROB SERV. DROG.     " TO DETALLE-MOV
+               WHEN "81" MOVE "COMPROB SERV. CIRUGIA   " TO DETALLE-MOV
+               WHEN "82" MOVE "COMPROB SERV. LABORAT   " TO DETALLE-MOV
+               WHEN "83" MOVE "COMPROB SERV. IMAGEN.   " TO DETALLE-MOV
+               WHEN "84" MOVE "COMPROB SERV. OTROS     " TO DETALLE-MOV
+               WHEN "85" MOVE "COMPROB SERV. CONSULT   " TO DETALLE-MOV
+               WHEN "87" MOVE "COMPROB SERV. P.Y.P.    " TO DETALLE-MOV
+               WHEN "89" MOVE "FACTURAS CONTADO        " TO DETALLE-MOV
+               WHEN "9A" MOVE "FACTURAS AMBULATORIO    " TO DETALLE-MOV
+               WHEN "9P" MOVE "FACTURAS HOSPITALIZAC   " TO DETALLE-MOV
+               WHEN "9T" MOVE "FACTURAS TRANSITO       " TO DETALLE-MOV
+               WHEN "9G" MOVE "RECEPCION DE GLOSAS     " TO DETALLE-MOV
+               WHEN "9P" MOVE "PENDIENTES DE ENTREGA   " TO DETALLE-MOV
+               WHEN "LT" MOVE "LOTES FARMACEUTICOS     " TO DETALLE-MOV
+               WHEN "HP" MOVE "PEDIDOS DE FARMACIA     " TO DETALLE-MOV
+               WHEN "HD" MOVE "DEVOLUCION PEDIDOS FARMA" TO DETALLE-MOV
+               WHEN "AS" MOVE "AUTORIZ. SERV. URGENC   " TO DETALLE-MOV
+               WHEN "AI" MOVE "AUTORIZ. INCAPACIDAD    " TO DETALLE-MOV
+               WHEN "U1" MOVE "CONSULTORIO TRIAGE URGEN" TO DETALLE-MOV
+               WHEN "U2" MOVE "CONSULTORIO TRIAGE EMBAR" TO DETALLE-MOV
+               WHEN "U3" MOVE "CONSULTORIO TRIAGE REMIT" TO DETALLE-MOV
+           END-EVALUATE.
+
+              
+       COPY "..\..\FUENTES\SC-WEB19.CBL".
+

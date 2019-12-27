@@ -1,0 +1,7 @@
+LIBRARY SER448O
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

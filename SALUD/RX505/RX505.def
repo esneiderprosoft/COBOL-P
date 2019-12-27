@@ -1,0 +1,7 @@
+LIBRARY RX505
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

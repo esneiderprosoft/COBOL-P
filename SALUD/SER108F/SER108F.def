@@ -1,0 +1,7 @@
+LIBRARY SER108F
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

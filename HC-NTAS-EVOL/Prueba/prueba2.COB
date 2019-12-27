@@ -1,0 +1,132 @@
+      *=================================================================
+      *TECLAS
+      *=================================================================
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. "HttpExtensionProc".
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+           SELECT ARCHIVO-PLANO LOCK MODE IS AUTOMATIC
+                 ASSIGN  "D:\WEB\MAIN-ELECT\app\MIGRA\PRUEBA.TXT" 
+                 ORGANIZATION LINE SEQUENTIAL
+                 FILE STATUS IS OTR-STAT.
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       FD  ARCHIVO-PLANO
+           LABEL RECORD STANDARD.
+       01  REG-PLANO.
+           02 DATO-PLANO       PIC X(6).
+       
+      
+       WORKING-STORAGE  SECTION.
+       COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC.CBL".
+       
+       01 LINEA-LLEGAD-W        PIC XX.
+
+
+       77  ESC1                USAGE IS COMP-1.
+       77  ESC2                USAGE IS COMP-2.
+       77  ESC5                PIC S9(4) COMP-5.
+       77  ESCBIN                PIC S9(4) BINARY.
+       77  ESC-EDIT             PIC -9(5).9(4).
+
+       01 DATOS-ENVIO.
+          02 DAT0-ENV                  PIC XX.
+
+      
+       LINKAGE SECTION.
+       COPY "P:\PROG\PROYECT\FUENTES\ISAPICTX.CBL".
+      
+       PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+
+       DECLARATIVES.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-PLANO.
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE "ANSJDNA"                TO MSJ2-HTML
+              MOVE "PRUEBA2"                TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
+       END DECLARATIVES.
+       INICIAR-IIS.
+           MOVE LOW-VALUE TO COBW3.
+           MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+           CALL "COBW3_INIT" USING COBW3.
+      
+       LEER-DATO-HTML.
+           MOVE "datosh" TO COBW3-SEARCH-DATA.
+           CALL "COBW3_GET_VALUE" USING COBW3.
+           MOVE COBW3-GET-DATA TO LINEA-LLEGAD-W.
+
+           MOVE LINEA-LLEGAD-W  TO  DAT0-ENV
+           OPEN OUTPUT ARCHIVO-PLANO.
+           WRITE REG-PLANO FROM LINEA-LLEGAD-W BEFORE 1
+           CLOSE ARCHIVO-PLANO.
+
+
+
+       ABRIR-GRUPO-SER.
+
+      *     MOVE "ñ" TO DAT0-ENV
+           GO TO ENVIO-DATOS.            
+
+
+       ENVIO-DATOS.
+           MOVE "datosrecibidos"  TO COBW3-CNV-NAME
+           MOVE DATOS-ENVIO       TO COBW3-CNV-VALUE
+           CALL "COBW3_SET_CNV"   USING COBW3
+
+           MOVE "../PAGINAS/RECIBIDOS.ASPX"  TO SALIDA-HTML
+           PERFORM ABRIR-HTML.
+      
+       CERRAR-SESION.
+           CALL "COBW3_FREE" USING COBW3.
+           MOVE 1 TO PROGRAM-STATUS.
+           EXIT PROGRAM.
+
+
+       ENVIAR2-ERROR.
+001550     MOVE "datosrecibidos" TO COBW3-CNV-NAME
+001560     MOVE MSJ-HTML         TO COBW3-CNV-VALUE
+001570     CALL "COBW3_SET_CNV"  USING COBW3
+001580     MOVE "..\PAGINAS\RECIBIDOS.ASPX" TO SALIDA-HTML
+001590     PERFORM ABRIR-HTML.
+001600     GO TO CERRAR-SESION.
+
+
+      * CARGAR-DATOS.
+      *     IF TABLA-PLANO-W (I) = SPACES OR LOW-VALUES
+      *        CONTINUE
+      *     ELSE 
+      *        MOVE "datosrecibidos"   TO COBW3-CNV-NAME
+      *        MOVE DATOS-PLANO-W      TO COBW3-CNV-VALUE
+      *        CALL "COBW3_SET_REPEAT" USING COBW3.
+      *     END-IF.
+
+000600 ABRIR-HTML.
+000610     SET  COBW3-PHYSICALPATH TO TRUE.
+000620     CALL "COBW3_GET_REQUEST_INFO" USING COBW3.
+000630
+000640     IF COBW3-STATUS = ZERO
+000650       THEN
+000660         MOVE COBW3-REQUEST-INFO TO PATHNAME-W
+000670     END-IF.
+000680
+000690     MOVE SPACE TO COBW3-HTML-FILENAME.
+000700     STRING COBW3-REQUEST-INFO(1:COBW3-REQUEST-INFO-LENGTH)
+000710      "\"                    DELIMITED BY SIZE
+000720      SALIDA-HTML            DELIMITED BY SPACE
+000730     INTO COBW3-HTML-FILENAME
+000740     CALL "COBW3_PUT_HTML" using COBW3.
+
+

@@ -1,0 +1,7 @@
+LIBRARY ARCHIVOS-HC
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

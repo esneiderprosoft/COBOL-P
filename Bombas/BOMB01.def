@@ -1,0 +1,7 @@
+LIBRARY BOMB01
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

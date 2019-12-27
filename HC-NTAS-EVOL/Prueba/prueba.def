@@ -1,0 +1,7 @@
+LIBRARY prueba
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

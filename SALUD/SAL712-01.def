@@ -1,0 +1,6 @@
+LIBRARY SAL7122-01
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+

@@ -1,0 +1,7 @@
+LIBRARY HC523
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

@@ -1,0 +1,7 @@
+LIBRARY TAX015-1
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+

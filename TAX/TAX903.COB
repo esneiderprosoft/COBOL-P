@@ -1,0 +1,446 @@
+004820*=================================================================
+004830* LISTADO DE PARQUE AUTOMOTOR POR (MODALIDAD, PROPIETARIO, ORDEN PLACA).
+004840*=================================================================
+004850 IDENTIFICATION DIVISION.
+004860 PROGRAM-ID. "HttpExtensionProc".
+004870 ENVIRONMENT DIVISION.
+004880 CONFIGURATION SECTION.
+004890 INPUT-OUTPUT SECTION.
+004900 FILE-CONTROL.
+004910     COPY "P:\PROG\PROYECT\FUENTES\FS-USUNET.CBL".
+004920     COPY "P:\PROG\PROYECT\FUENTES\FS-SESION.CBL".
+004930     COPY "P:\PROG\PROYECT\FUENTES\FS-CARRO-TAX.CBL".
+           COPY "P:\PROG\PROYECT\FUENTES\FS-TERCE.CBL".
+
+
+           SELECT ARCHIVO-COSTO LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-COST-W
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC;
+                  RECORD KEY IS COD-COSTO
+                  FILE STATUS IS OTR-STAT.
+
+
+           SELECT ARCHIVO-MODALIDAD  LOCK MODE IS AUTOMATIC
+                  ASSIGN NOM-MODAL-W
+                  ORGANIZATION IS INDEXED
+                  ACCESS MODE IS DYNAMIC
+                  RECORD KEY IS COD-MOD
+                  FILE STATUS IS OTR-STAT.
+
+005080 DATA DIVISION.
+005090 FILE SECTION.
+005100 COPY "P:\PROG\PROYECT\FUENTES\FD-USUNET.CBL".
+005110 COPY "P:\PROG\PROYECT\FUENTES\FD-SESION.CBL".
+000690 COPY "P:\PROG\PROYECT\FUENTES\FD-CARRO-TAX.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-TERCE.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-COSTO.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-TAXMO.CBL".
+
+005190 WORKING-STORAGE SECTION.
+005200 COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
+005210 COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC19.CBL".
+005220 
+       77 NOM-COST-W                PIC X(70).
+       77 NOM-MODAL-W               PIC X(70).
+       77 DATOS-PLANO-W             PIC X(500).
+       77 FONDO-EDIT                PIC Z.Z.
+       77 FONDO-R-EDIT              PIC Z.Z.
+
+       01 MODALIDAD-W            PIC X.
+       01 CEDULA-W               PIC X.
+
+       01 FECHA-W.
+          02 ANO-W                  PIC 9(4).
+          02 MES-W                  PIC 99.
+          02 DIA-W                  PIC 99.
+
+       01 FECHA-EDIT.
+          02 MES-EDIT                PIC X(3).
+          02 FILLER                  PIC X.
+          02 DIA-EDIT                PIC ZZ.
+          02 FILLER                  PIC X VALUE "/".
+          02 ANO-EDIT                PIC 99.
+
+       01 LIN-1.
+          02 FILLER                  PIC X(9)   VALUE "{*PLACA*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 CODIGO-CAR-J            PIC X.
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(14)  VALUE "*PROPIETARIO*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 NIT-J                   PIC X(10).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(10)  VALUE "*DESCRIP*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 DESCRIP-PROPIET-J       PIC X(50).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(10)  VALUE "*INTERNO*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 INTERNO-CAR-J           PIC X(4).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(8)   VALUE "*MARCA*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 MARCA-CAR-J             PIC X(20).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(9)   VALUE "*MODELO*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 MODELO-CAR-J            PIC X(4).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(11)  VALUE "*T-OPERAC*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 T-OPERAC-J              PIC X(9).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(12)  VALUE "*PASAJEROS*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 PASAJEROS-CAR-J         PIC XX.
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(8)   VALUE "*MOTOR*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 MOTOR-CAR-J             PIC X(20).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(9)   VALUE "*CHASIS*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 CHASIS-CAR-J            PIC X(20).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(14)  VALUE "*COMBUSTIBLE*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 COMBUSTIBLE-CAR-J       PIC X(11).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(8)   VALUE "*FONDO*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 FONDO-J                 PIC X(3).
+          02 FILLER                  PIC XX     VALUE "*,".
+          02 FILLER                  PIC X(10)  VALUE "*FONDO-R*:".
+          02 FILLER                  PIC X      VALUE "*".
+          02 FONDO-R-J               PIC X(3).
+003710    02 FILLER                  PIC XX     VALUE "*}".
+005040    02 CIERRE-LIN-1            PIC X.
+
+
+006310 LINKAGE SECTION.
+006320 COPY "P:\PROG\PROYECT\FUENTES\ISAPICTX.CBL".
+006330 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+006340
+006350 DECLARATIVES.
+006360 I-O-TEST SECTION.
+006370     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+006380 ESCR-EXCEPTIONES.
+006390     IF OTR-STAT = "00"
+006400        CONTINUE 
+006410     ELSE
+006420        MOVE OTR-STAT         TO MSJ1-HTML
+006430        MOVE NOM-USU-W        TO MSJ2-HTML
+006440        MOVE "TAX903"         TO MSJ3-HTML
+006450        GO TO ENVIAR2-ERROR
+006460     END-IF.
+006470
+006480 I-O-TEST SECTION.
+006490     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.
+006500 ESCR-EXCEPTIONES.
+006510     IF OTR-STAT = "00" 
+006520        CONTINUE 
+006530     ELSE
+006540        MOVE OTR-STAT         TO MSJ1-HTML
+006550        MOVE NOM-SESION-W     TO MSJ2-HTML
+006560        MOVE "TAX903"         TO MSJ3-HTML
+006570        GO TO ENVIAR2-ERROR
+006580     END-IF.
+006590  
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-MODALIDAD.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00"
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-MODAL-W      TO MSJ2-HTML
+006680        MOVE "TAX903"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+002694 I-O-TEST SECTION.
+002700     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-CARROS.
+002710 ESCR-EXCEPTIONES.
+002720     IF OTR-STAT = "00"
+002730        CONTINUE 
+002740     ELSE
+002750        MOVE OTR-STAT         TO MSJ1-HTML
+002760        MOVE NOM-CAR-TAX-LNK  TO MSJ2-HTML
+002770        MOVE "TAX903"         TO MSJ3-HTML
+002780        GO TO ENVIAR2-ERROR
+002790     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-TERCEROS.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00"
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-TER-LNK      TO MSJ2-HTML
+006680        MOVE "TAX903"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+006600 I-O-TEST SECTION.
+006610     USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-COSTO.
+006620 ESCR-EXCEPTIONES.
+006630     IF OTR-STAT = "00"
+006640        CONTINUE 
+006650     ELSE
+006660        MOVE OTR-STAT         TO MSJ1-HTML
+006670        MOVE NOM-COST-W       TO MSJ2-HTML
+006680        MOVE "TAX903"         TO MSJ3-HTML
+006690        GO TO ENVIAR2-ERROR
+006700     END-IF.
+
+006720  END DECLARATIVES.
+006730
+006740 INICIAR-IIS.
+006750     MOVE LOW-VALUE TO COBW3.
+006760     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+006770     CALL "COBW3_INIT" USING COBW3.
+006780
+006790 LEER-DATO-HTML.
+006800     MOVE "datosh" TO COBW3-SEARCH-DATA.
+006810     CALL "COBW3_GET_VALUE" USING COBW3.
+006820     MOVE COBW3-GET-DATA    TO LINEA-LLEGAD-W.
+
+           INITIALIZE DATO-LLEGADA-W
+
+           UNSTRING LINEA-LLEGAD-W DELIMITED BY "|"
+              INTO SESION-LLEGAD-W, DIRECTORIO-LLEGAD-W, CARPTA-LLEGAD-W, PASO-W, 
+                   MODALIDAD-W, CEDULA-W
+           END-UNSTRING.
+
+           MOVE SESION-LLEGAD-W    TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE TO FECHA-TOTAL.
+           ACCEPT HORA-TOTAL FROM TIME.
+
+000797 INICIAR-SESION.
+000806     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-SESION.DAT" TO NOM-SESION-W.
+000810     GO TO VALIDAR-SESION.
+000850
+000860 FIN-VALIDAR-SESION.
+006840     
+006900 ABRIR-USUARIO.
+006910     INITIALIZE OTR-STAT.
+006920     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+006930
+006940     OPEN INPUT ARCHIVO-USUNET
+006950     EVALUATE OTR-STAT
+006960       WHEN "00"  CONTINUE
+006970       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+006980                  INITIALIZE REG-USUNET
+006990                  WRITE REG-USUNET
+007000                  CLOSE ARCHIVO-USUNET
+007010                  MOVE "SC-2"                        TO MSJ1-HTML
+007020                  MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007030                  MOVE "TAX903"                      TO MSJ3-HTML
+007040                  GO TO ENVIAR2-ERROR
+007050       WHEN OTHER GO TO CERRAR-SESION
+007060     END-EVALUATE.
+007070
+007080     INITIALIZE LLAVE-USUNET.
+
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007130
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+007210     IF NOMBRE-USUNET = SPACES
+007220     OR NIT-USUNET = ZEROS
+007230        MOVE "SC-2"      TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios" TO MSJ2-HTML
+007250        MOVE "TAX903"    TO MSJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+007280 
+007350
+       ASIGNAR-NOMBRES.
+
+           INITIALIZE NOM-MODAL-W
+
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+007287     MOVE "\\" TO NOM-MODAL-W
+007288     INSPECT NOM-MODAL-W REPLACING FIRST "                    "
+007289                                    BY IP-DATOS-USUNET
+007290     INSPECT NOM-MODAL-W REPLACING FIRST " "
+007291                                    BY "\"
+007292     INSPECT NOM-MODAL-W REPLACING FIRST "                              "
+007293                                    BY DIRECTORIO-LLEGAD-W
+
+           MOVE NOM-MODAL-W   TO NOM-CAR-TAX-LNK NOM-TER-LNK NOM-COST-W
+
+007294     INSPECT NOM-MODAL-W REPLACING FIRST "                     "
+007295                                      BY "\CONTROL\SC-MODAL.DAT".
+
+           INSPECT NOM-CAR-TAX-LNK REPLACING FIRST "                        "
+                                                BY "\CONTROL\SC-ARCHCARR.DAT".
+
+           INSPECT NOM-TER-LNK REPLACING  FIRST "                       "
+                                             BY "\CONTROL\SC-ARCHTER.DAT".
+
+           INSPECT NOM-COST-W  REPLACING  FIRST "                       "
+                                             BY "\CONTROL\SC-ARCHCOS.DAT".
+
+       LEER-PASO.
+           OPEN INPUT ARCHIVO-CARROS.
+
+
+           EVALUATE PASO-W
+               WHEN "1" GO TO POR-MODALIDAD
+               WHEN "2" INITIALIZE REG-CAR
+                        GO TO ABRIR-JSON
+               WHEN "3" INITIALIZE REG-CAR
+                        GO TO ABRIR-JSON
+           END-EVALUATE.
+
+       POR-MODALIDAD.
+           INITIALIZE PROPIET-CAR.
+
+           START ARCHIVO-CARROS KEY >= INTERNO-CAR
+                 INVALID KEY
+                         MOVE "SC-2"   TO MSJ1-HTML
+                         MOVE "08"     TO MSJ2-HTML
+                         MOVE "TAX903" TO MSJ3-HTML
+                         GO TO ENVIAR2-ERROR
+           END-START.
+
+       ABRIR-JSON.
+008150     OPEN INPUT ARCHIVO-TERCEROS
+                      ARCHIVO-MODALIDAD
+
+008160     INITIALIZE REG-CAR.
+008170     MOVE "{*Carros*:[" TO  DATOS-PLANO-W
+008180     INSPECT DATOS-PLANO-W REPLACING ALL "*" BY CARAC-COMILLA
+008190     PERFORM DATOS-ENVIO.
+008200     MOVE 0 TO SW-FIN.
+       LEER-CARROS.
+
+008230     IF SW-FIN = 0
+008240        MOVE 1 TO SW-FIN
+008250     ELSE
+008260        MOVE LIN-1 TO DATOS-PLANO-W
+008270        PERFORM DATOS-ENVIO
+008280     END-IF
+
+           READ ARCHIVO-CARROS NEXT WITH NO LOCK AT END GO TO CERRAR-CARROS.
+
+           IF PASO-W = "2"
+              CONTINUE
+           ELSE
+              IF PASO-W = "3" AND MODALIDAD-W = "*"
+                 CONTINUE
+              ELSE
+                 IF MODALIDAD-W = MODALIDAD-CAR
+                    CONTINUE
+                 ELSE
+                    MOVE 0 TO SW-FIN
+                    GO TO LEER-CARROS
+                 END-IF
+              END-IF
+           END-IF
+
+           MOVE CODIGO-CAR    TO CODIGO-CAR-J
+
+           MOVE PROPIET-CAR   TO COD-TER
+           READ ARCHIVO-TERCEROS WITH NO LOCK
+                INVALID KEY MOVE SPACES TO DESCRIP-TER
+           END-READ
+
+           MOVE DESCRIP-TER    TO DESCRIP-PROPIET-J
+
+           MOVE COD-TER TO NIT-J
+           IF CEDULA-W = "S" AND NIT-TER > 0
+              MOVE NIT-TER  TO NIT-J
+           END-IF
+
+           MOVE INTERNO-CAR   TO INTERNO-CAR-J
+           MOVE MODELO-CAR    TO MODELO-CAR-J
+
+           MOVE T-OPERAC-CAR TO FECHA-W
+           PERFORM EDITAR-FECHA
+
+           MOVE FECHA-EDIT    TO T-OPERAC-J
+           MOVE PASAJEROS-CAR TO PASAJEROS-CAR-J
+           MOVE MARCA-CAR     TO MARCA-CAR-J 
+           MOVE MOTOR-CAR     TO MOTOR-CAR-J
+           MOVE CHASIS-CAR    TO CHASIS-CAR-J
+
+           IF COMBUSTIBLE-CAR = 1 
+              MOVE "GASOLINA " TO COMBUSTIBLE-CAR-J
+           ELSE
+              MOVE "ACPM     " TO COMBUSTIBLE-CAR-J
+           END-IF
+
+           MOVE FONDO-CAR      TO FONDO-EDIT
+           MOVE FONDO-EDIT     TO FONDO-J
+
+           MOVE FONDO-R-CAR    TO FONDO-R-EDIT
+           MOVE FONDO-R-EDIT   TO FONDO-R-J
+
+
+           MOVE "," TO CIERRE-LIN-1
+           INSPECT LIN-1 REPLACING ALL "*" BY CARAC-COMILLA
+
+           GO LEER-CARROS.
+
+       CERRAR-CARROS.
+
+008880     INITIALIZE LIN-1
+008890     MOVE LIN-1 TO DATOS-PLANO-W
+008900     PERFORM DATOS-ENVIO.
+008910
+008920     MOVE "]}" TO DATOS-PLANO-W
+008930     PERFORM DATOS-ENVIO.
+008940          
+008950     CLOSE ARCHIVO-MODALIDAD
+                 ARCHIVO-TERCEROS
+                 ARCHIVO-CARROS.
+
+
+010700 PAGINA-CONFIG.  
+010720     MOVE "statuscode" TO COBW3-CNV-NAME
+010730     MOVE "00"         TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV" USING COBW3
+
+010720     MOVE "programa-id" TO COBW3-CNV-NAME
+010730     MOVE "TAX903"      TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_CNV" USING COBW3
+
+010760     MOVE "..\PAGINAS\RECIBIDOSLISTADO.ASPX" TO SALIDA-HTML
+010770     PERFORM ABRIR-HTML.
+
+007990 CERRAR-SESION.
+008000     CALL "COBW3_FREE" USING COBW3.
+008010     MOVE 1 TO PROGRAM-STATUS.
+008020     EXIT PROGRAM.
+
+       DATOS-ENVIO.
+010720     MOVE "datosrecibidos" TO COBW3-CNV-NAME
+010730     MOVE DATOS-PLANO-W    TO COBW3-CNV-VALUE
+010740     CALL "COBW3_SET_REPEAT" USING COBW3.
+
+       EDITAR-FECHA.
+           EVALUATE MES-W
+               WHEN 01 MOVE "ENE" TO MES-EDIT
+               WHEN 02 MOVE "FEB" TO MES-EDIT
+               WHEN 03 MOVE "MAR" TO MES-EDIT
+               WHEN 04 MOVE "ABR" TO MES-EDIT
+               WHEN 05 MOVE "MAY" TO MES-EDIT
+               WHEN 06 MOVE "JUN" TO MES-EDIT
+               WHEN 07 MOVE "JUL" TO MES-EDIT
+               WHEN 08 MOVE "AGT" TO MES-EDIT
+               WHEN 09 MOVE "SEP" TO MES-EDIT
+               WHEN 10 MOVE "OCT" TO MES-EDIT
+               WHEN 11 MOVE "NOV" TO MES-EDIT
+               WHEN 12 MOVE "DIC" TO MES-EDIT
+           END-EVALUATE
+
+           MOVE DIA-W TO DIA-EDIT
+           MOVE ANO-W TO ANO-EDIT.
+
+008040 COPY "P:\PROG\PROYECT\FUENTES\SC-WEB19.CBL".
+

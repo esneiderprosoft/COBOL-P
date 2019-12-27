@@ -1,0 +1,207 @@
+004820*=================================================================
+004830* GUARDADO, CONSULTA Y RETIRO DE TABLA DE MACROS PARA ACTUALIZACION
+      * DE CONTROLES
+004840*=================================================================
+004850 IDENTIFICATION DIVISION.
+004860 PROGRAM-ID. "HttpExtensionProc".
+004870 ENVIRONMENT DIVISION.
+004880 CONFIGURATION SECTION.
+004890 INPUT-OUTPUT SECTION.
+004900 FILE-CONTROL.
+004910     COPY "P:\PROG\PROYECT\FUENTES\FS-USUNET.CBL".
+004920     COPY "P:\PROG\PROYECT\FUENTES\FS-SESION.CBL".
+                SELECT ARCHIVO-SALAS-CIR LOCK MODE IS AUTOMATIC
+                       ASSIGN NOM-SALAS-W
+                       ORGANIZATION IS INDEXED
+                       ACCESS MODE IS DYNAMIC
+                       RECORD KEY IS CODIGO-SALA
+                       FILE STATUS IS OTR-STAT.
+
+005070 DATA DIVISION.
+005090 FILE SECTION.
+005100 COPY "P:\PROG\PROYECT\FUENTES\FD-USUNET.CBL".
+005110 COPY "P:\PROG\PROYECT\FUENTES\FD-SESION.CBL".
+       COPY "P:\PROG\PROYECT\FUENTES\FD-SALAS.CBL".	   
+
+005190 WORKING-STORAGE SECTION.
+005200 COPY "P:\PROG\PROYECT\FUENTES\COBW3.CBL".
+005210 COPY "P:\PROG\PROYECT\FUENTES\WEB-CARAC19.CBL".
+
+       01 LINEA-LLEGADA-W               PIC X(100).
+       01 NOM-SALAS-W                   PIC X(100).
+       01 DATOS-PLANO-W                 PIC X(1024).
+
+       01 LIN-1.
+          02 FILLER                     PIC X(10) VALUE "{*CODIGO*:".
+          02 FILLER                     PIC X     VALUE "*".
+          02 CODIGO-SALA-J              PIC XX.
+          02 FILLER                     PIC XX    VALUE "*,".
+          02 FILLER                     PIC X(14) VALUE "*DESCRIPCION*:".
+          02 FILLER                     PIC X     VALUE "*".
+          02 DESCRIP-SALA-J             PIC X(25).
+          02 FILLER                     PIC XX    VALUE "*}".
+          02 CIERRE-LIN-1               PIC X.
+
+006310 LINKAGE SECTION.
+006320 COPY "P:\PROG\PROYECT\FUENTES\ISAPICTX.CBL".
+006330 PROCEDURE DIVISION WITH stdcall LINKAGE USING ISAPI-CTX-CNT.
+006340
+006350 DECLARATIVES.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-USUNET.         
+       ESCR-EXCEPTIONES.
+           IF OTR-STAT = "00"
+              CONTINUE 
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-USU-W                TO MSJ2-HTML
+              MOVE "HC878"                  TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SESION.         
+       ESCR-EXCEPTIONES.                                                                                                                                
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-SESION-W             TO MSJ2-HTML
+              MOVE "HC878"                  TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+       I-O-TEST SECTION.
+           USE AFTER EXCEPTION PROCEDURE ON ARCHIVO-SALAS-CIR.
+       ESCR-EXCEPTIONES.                                                                                                                                
+           IF OTR-STAT = "00"
+              CONTINUE
+           ELSE
+              MOVE OTR-STAT                 TO MSJ1-HTML
+              MOVE NOM-SALAS-W              TO MSJ2-HTML
+              MOVE "HC878"                  TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+006720  END DECLARATIVES.
+006730
+006740 INICIAR-IIS.
+006750     MOVE LOW-VALUE TO COBW3.
+006760     MOVE FUNCTION ADDR(ISAPI-CTX-CNT) TO COBW3-CONTEXT.
+006770     CALL "COBW3_INIT" USING COBW3.
+006780
+006790 LEER-DATO-HTML.
+006800     MOVE "datosh" TO COBW3-SEARCH-DATA.
+006810     CALL "COBW3_GET_VALUE" USING COBW3.
+006820     MOVE COBW3-GET-DATA    TO LINEA-LLEGADA-W.
+
+           UNSTRING LINEA-LLEGADA-W DELIMITED BY "|"
+               INTO SESION-LLEGAD-W, DIRECTORIO-LLEGAD-W, CARPTA-LLEGAD-W
+           END-UNSTRING.
+
+001855     MOVE SESION-LLEGAD-W  TO LLAVE-SESION-W.
+           MOVE FUNCTION CURRENT-DATE  TO FECHA-TOTAL.
+
+000797 INICIAR-SESION.
+000806     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-SESION.DAT" TO NOM-SESION-W
+000810     GO TO VALIDAR-SESION.
+000850
+000860 FIN-VALIDAR-SESION.
+006840
+006900 ABRIR-USUARIO.
+006910     INITIALIZE OTR-STAT.
+006920     MOVE "D:\WEB\MAIN-ELECT\DATOS\SC-ARCHUSU.DAT" TO NOM-USU-W
+006930
+006940     OPEN INPUT ARCHIVO-USUNET
+006950     EVALUATE OTR-STAT
+006960       WHEN "00"  CONTINUE
+006970       WHEN "35"  OPEN OUTPUT ARCHIVO-USUNET
+006980                  INITIALIZE REG-USUNET
+006990                  WRITE REG-USUNET
+007000                  CLOSE ARCHIVO-USUNET
+007010                  MOVE "Validacion de Usuario"       TO MSJ1-HTML
+007020                  MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007030                  MOVE "Sc"                          TO MSJ3-HTML
+007040                  GO TO ENVIAR2-ERROR
+007050       WHEN OTHER GO TO CERRAR-SESION
+007060     END-EVALUATE.
+007070
+007080     INITIALIZE LLAVE-USUNET.
+
+007100
+007110 LEER-USUARIO.
+007120     READ ARCHIVO-USUNET NEXT AT END MOVE 0 TO SW-FIN.
+007140     CLOSE ARCHIVO-USUNET.
+007200     
+007210     IF NOMBRE-USUNET = SPACES
+007230        MOVE "Validacion de Sesion"        TO MSJ1-HTML
+007240        MOVE "Falta configurar usuarios"   TO MSJ2-HTML
+007250        MOVE "Sc"                          TO MsJ3-HTML
+007260        GO TO ENVIAR2-ERROR
+007270     END-IF.
+007280 
+007350
+           INSPECT IP-DATOS-USUNET REPLACING FIRST "/" BY "\"
+
+001614     INITIALIZE NOM-SALAS-W
+
+           MOVE "\\" TO NOM-SALAS-W
+
+           INSPECT NOM-SALAS-W REPLACING FIRST "                    "
+                                            BY IP-DATOS-USUNET
+
+007190     INSPECT NOM-SALAS-W REPLACING FIRST "                        "
+                                            BY "\PROG\DATOS\SC-SALAS.DAT"
+
+           OPEN INPUT ARCHIVO-SALAS-CIR
+
+           MOVE "{*SALAS*:["       TO DATOS-PLANO-W
+           INSPECT DATOS-PLANO-W REPLACING ALL "*" BY CARAC-COMILLA
+           PERFORM DATOS-ENVIO.
+
+        CONSULTAR-ARCHIVO.
+           READ ARCHIVO-SALAS-CIR NEXT WITH NO LOCK AT END GO TO CERRAR-ARCHIVOS.
+
+           MOVE CODIGO-SALA  TO CODIGO-SALA-J
+           MOVE DESCRIP-SALA TO DESCRIP-SALA-J
+
+           MOVE "," TO CIERRE-LIN-1
+           INSPECT LIN-1 REPLACING ALL "*" BY CARAC-COMILLA
+           INSPECT LIN-1 REPLACING ALL LOW-VALUES BY SPACES
+           MOVE LIN-1 TO DATOS-PLANO-W
+           PERFORM DATOS-ENVIO
+
+           GO TO CONSULTAR-ARCHIVO.
+
+        CERRAR-ARCHIVOS.
+           CLOSE ARCHIVO-SALAS-CIR
+
+           INITIALIZE LIN-1
+           INSPECT LIN-1 REPLACING ALL "*" BY CARAC-COMILLA
+           MOVE LIN-1 TO DATOS-PLANO-W
+           PERFORM DATOS-ENVIO
+
+           MOVE "]}" TO DATOS-PLANO-W
+           PERFORM DATOS-ENVIO.
+
+        PAGINA-CONFIG.
+           MOVE "statuscode" TO COBW3-CNV-NAME
+           MOVE "00"         TO COBW3-CNV-VALUE
+           CALL "COBW3_SET_CNV" USING COBW3
+
+           MOVE "programa-id" TO COBW3-CNV-NAME
+           MOVE "HC878"       TO COBW3-CNV-VALUE
+           CALL "COBW3_SET_CNV" USING COBW3
+
+           MOVE "..\PAGINAS\RECIBIDOSLISTADO.ASPX" TO SALIDA-HTML
+           PERFORM ABRIR-HTML.
+
+       DATOS-ENVIO.
+           MOVE "datosrecibidos" TO COBW3-CNV-NAME
+           MOVE DATOS-PLANO-W    TO COBW3-CNV-VALUE
+           CALL "COBW3_SET_REPEAT" USING COBW3.
+         
+       CERRAR-SESION.
+           CALL "COBW3_FREE" USING COBW3.
+           MOVE 1 TO PROGRAM-STATUS.
+           EXIT PROGRAM.
+
+       COPY "P:\PROG\PROYECT\FUENTES\SC-WEB19.CBL".
+

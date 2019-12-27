@@ -1,0 +1,6 @@
+LIBRARY SER819H
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension
+

@@ -1,0 +1,14 @@
+TITLE
+COLOR F9
+
+
+taskkill /F /IM "W3WP.EXE">nul 2>&1
+
+pause
+
+DEL *.DLL
+
+XCOPY \\192.168.0.100\PSCELECT$\SALUD\APP\*.DLL  d:\progelect\salud\APP\*.* /y /c
+XCOPY \\192.168.0.100\PSCELECT$\SALUD\APP\*.sc3  d:\progelect\salud\APP\*.* /y /c
+XCOPY \\192.168.0.100\PSCELECT$\SALUD\APP\*.sc4  d:\progelect\salud\APP\*.* /y /c
+pause

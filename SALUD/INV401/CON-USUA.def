@@ -1,0 +1,7 @@
+LIBRARY CON-USUA
+EXPORTS 
+    GetExtensionVersion 
+    HttpExtensionProc 
+    TerminateExtension 
+
+
