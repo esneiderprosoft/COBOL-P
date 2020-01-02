@@ -36,7 +36,7 @@
        77 ULT-NRO-W                       PIC 9(9).
 
        01 SECU-EDIT.
-          02 SEC1-EDIT                 PIC 9.
+          02 SEC1-EDIT               PIC 9.
           02 SEC2-EDIT                 PIC XX.
 
        01 DATO-LLEGADA-W.
