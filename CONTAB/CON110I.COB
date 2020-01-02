@@ -31,6 +31,7 @@
        COPY "..\..\FUENTES\COBW3.CBL".
        COPY "..\..\FUENTES\WEB-CARAC19.CBL".
 
+      *mensaje de commit prueba
        77 DATOS-PLANO-W           PIC X(500).
        77 LOTES-W             PIC X(100).
 
