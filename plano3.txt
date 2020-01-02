@@ -1,1 +1,2 @@
 este plano de pruebas
+se añade esta linea de prueba para, porfavor rechazar este cambio
