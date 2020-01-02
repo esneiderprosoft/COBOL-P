@@ -32,6 +32,7 @@
        COPY "..\..\FUENTES\WEB-CARAC19.CBL".
 
       *mensaje de commit prueba
+      *este otro mensaje de diferente commit
        77 DATOS-PLANO-W           PIC X(500).
        77 LOTES-W             PIC X(100).
 

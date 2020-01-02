@@ -1,5 +1,5 @@
       *=================================================================
-      *GRABA COMPROBANTE LIBRO VIAJES SOLO TAXMETA
+      *GRABA COMPROBANTE LIBRO VIAJES SOLO TAXMETA 
       *=================================================================
        IDENTIFICATION DIVISION.
        PROGRAM-ID. "HttpExtensionProc".
