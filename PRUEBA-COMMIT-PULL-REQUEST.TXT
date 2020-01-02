@@ -4,5 +4,5 @@ tercer cambio 3 por esneider
 cambio para el repositio de organizacion desde fork
 correccion de cambio que dijo johan
 
-este cambio es de otro pry diferente
+este cambio es de otro pry  SE MODIFICA LA LINEA Y SE ELIMINA LA PALABRA DIFERENTE
 se me olvido añadir una lectura del archiovo y elimine la palabra proyecto de la linea anterior
