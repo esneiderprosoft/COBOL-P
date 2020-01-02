@@ -32,7 +32,7 @@
        COPY "..\..\FUENTES\WEB-CARAC19.CBL".
 
        77 DATOS-PLANO-W           PIC X(500).
-       77 LOTES-W                    PIC X(100).
+       77 LOTES-W             PIC X(100).
 
        01 LIN-1.
           02 FILLER                  PIC X(8)  VALUE "{*LOTE*:".
