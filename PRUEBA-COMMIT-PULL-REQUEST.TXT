@@ -6,3 +6,5 @@ correccion de cambio que dijo johan
 
 este cambio es de otro pry  SE MODIFICA LA LINEA Y SE ELIMINA LA PALABRA DIFERENTE
 se me olvido añadir una lectura del archiovo y elimine la palabra proyecto de la linea anterior
+
+este caso es nuevo para una nueva soliictud
