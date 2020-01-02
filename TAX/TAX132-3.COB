@@ -54,6 +54,24 @@
        77 NOM-USUAR-W               PIC X(70).
        77 SEC-X                     PIC 99.
 
+       01 NOMBRE-LNK               PIC X(30).
+       01 DIRECTORIO-W             PIC X(35).
+       01 INVALID-007              PIC 99.
+       01 MENSAJE-W                PIC X(50).
+       01 DATO-ULT-MOV-LNK.
+          02 LOTE-ULT-MOV-LNK.
+             03 LOTE1-ULT-MOV-LNK  PIC X.
+             03 LOTE2-ULT-MOV-LNK  PIC X.
+             03 LOTE3-ULT-MOV-LNK  PIC X.
+          02 NRO-ULT-COMP-LNK.
+             03 NRO1-ULT-COMP-LNK  PIC 9(3).
+             03 NRO2-ULT-COMP-LNK  PIC 9(6).
+          02 FECHA-ULT-MOV-LNK.
+             03 ANO-ULT-MOV-LNK    PIC 99.
+             03 MES-ULT-MOV-LNK    PIC 99.
+             03 DIA-ULT-MOV-LNK    PIC 99.
+
+
        01 COD-BANCO-W.
           02 MAY-BANCO-W            PIC X(4).
           02 AUX-BANCO-W            PIC X(7).
@@ -62,6 +80,9 @@
           02 SCTA-CAJA-W            PIC X(9).
           02 AUX-CAJA-W             PIC X(2).
 
+       01 COSTO-EDIT.
+          02 C-COSTO-1              PIC 99 VALUE ZEROS.
+          02 C-COSTO-2              PIC XX.
 
         01 REG-INT-W.
            02 LLAVE-INT-W.
@@ -156,7 +177,7 @@
 006410     ELSE
 006420        MOVE OTR-STAT         TO MSJ1-HTML
 006430        MOVE NOM-USU-W        TO MSJ2-HTML
-006440        MOVE "TAX132-2"       TO MSJ3-HTML
+006440        MOVE "TAX132-3"       TO MSJ3-HTML
 006450        GO TO ENVIAR2-ERROR
 006460     END-IF.
 006470
@@ -168,7 +189,7 @@
 006530     ELSE
 006540        MOVE OTR-STAT         TO MSJ1-HTML
 006550        MOVE NOM-SESION-W     TO MSJ2-HTML
-006560        MOVE "TAX132-2"       TO MSJ3-HTML
+006560        MOVE "TAX132-3"       TO MSJ3-HTML
 006570        GO TO ENVIAR2-ERROR
 006580     END-IF.
 
@@ -180,7 +201,7 @@
 006530     ELSE
 006540        MOVE OTR-STAT         TO MSJ1-HTML
 006550        MOVE NOM-USUAR-W      TO MSJ2-HTML
-006560        MOVE "TAX132-2"       TO MSJ3-HTML
+006560        MOVE "TAX132-3"       TO MSJ3-HTML
 006570        GO TO ENVIAR2-ERROR
 006580     END-IF.
 
@@ -193,7 +214,7 @@
 002740     ELSE
 002750        MOVE OTR-STAT          TO MSJ1-HTML
 002760        MOVE NOM-INTER-TAX-LNK TO MSJ2-HTML
-002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002770        MOVE "TAX132-3"        TO MSJ3-HTML
 002780        GO TO ENVIAR2-ERROR
 002790     END-IF.
 
@@ -205,7 +226,7 @@
 002740     ELSE
 002750        MOVE OTR-STAT         TO MSJ1-HTML
 002760        MOVE NOM-CAR-TAX-LNK  TO MSJ2-HTML
-002770        MOVE "TAX132-2"       TO MSJ3-HTML
+002770        MOVE "TAX132-3"       TO MSJ3-HTML
 002780        GO TO ENVIAR2-ERROR
 002790     END-IF.
 
@@ -217,7 +238,7 @@
 002740     ELSE
 002750        MOVE OTR-STAT          TO MSJ1-HTML
 002760        MOVE NOM-MOV           TO MSJ2-HTML
-002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002770        MOVE "TAX132-3"        TO MSJ3-HTML
 002780        GO TO ENVIAR2-ERROR
 002790     END-IF.
 
@@ -229,7 +250,7 @@
 002740     ELSE
 002750        MOVE OTR-STAT          TO MSJ1-HTML
 002760        MOVE NOM-TER-LNK       TO MSJ2-HTML
-002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002770        MOVE "TAX132-3"        TO MSJ3-HTML
 002780        GO TO ENVIAR2-ERROR
 002790     END-IF.
 
@@ -241,7 +262,7 @@
 002740     ELSE
 002750        MOVE OTR-STAT          TO MSJ1-HTML
 002760        MOVE NOM-MAE-LNK       TO MSJ2-HTML
-002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002770        MOVE "TAX132-3"        TO MSJ3-HTML
 002780        GO TO ENVIAR2-ERROR
 002790     END-IF.
 
@@ -253,7 +274,7 @@
 002740     ELSE
 002750        MOVE OTR-STAT          TO MSJ1-HTML
 002760        MOVE NOM-AGENC-W       TO MSJ2-HTML
-002770        MOVE "TAX132-2"        TO MSJ3-HTML
+002770        MOVE "TAX132-3"        TO MSJ3-HTML
 002780        GO TO ENVIAR2-ERROR
 002790     END-IF.
 
@@ -306,7 +327,7 @@
 007000                  CLOSE ARCHIVO-USUNET
 007010                  MOVE "SC-2"                        TO MSJ1-HTML
 007020                  MOVE "Falta configurar usuarios"   TO MSJ2-HTML
-007030                  MOVE "TAX132-2"                    TO MSJ3-HTML
+007030                  MOVE "TAX132-3"                    TO MSJ3-HTML
 007040                  GO TO ENVIAR2-ERROR
 007050       WHEN OTHER GO TO CERRAR-SESION
 007060     END-EVALUATE.
@@ -322,7 +343,7 @@
 007220     OR NIT-USUNET = ZEROS
 007230        MOVE "SC-2"      TO MSJ1-HTML
 007240        MOVE "Falta configurar usuarios" TO MSJ2-HTML
-007250        MOVE "TAX132-2"  TO MSJ3-HTML
+007250        MOVE "TAX132-3"  TO MSJ3-HTML
 007260        GO TO ENVIAR2-ERROR
 007270     END-IF.
 007280 
@@ -340,8 +361,17 @@
 007292     INSPECT NOM-INTER-TAX-LNK REPLACING FIRST "                              "
 007293                                            BY DIRECTORIO-LLEGAD-W
 
-           MOVE NOM-INTER-TAX-LNK  TO NOM-TER-LNK  NOM-MAE-LNK NOM-AGENC-W 
-                                      NOM-MOV NOM-USUAR-W NOM-CAR-TAX-LNK
+           MOVE NOM-INTER-TAX-LNK  TO NOM-TER-LNK  NOM-MAE-LNK NOM-AGENC-W NOM-MOV NOM-USUAR-W 
+                                      NOM-CAR-TAX-LNK DIRECTORIO-W NOMBRE-LNK
+
+           MOVE DIRECTORIO-LLEGAD-W  TO DIRECTORIO-W.
+
+           MOVE "\\" TO NOMBRE-LNK
+
+           INSPECT NOMBRE-LNK   REPLACING FIRST "                    "
+                                             BY IP-DATOS-USUNET
+           INSPECT NOMBRE-LNK   REPLACING FIRST " "
+                                             BY "\".
 
            INSPECT NOM-USUAR-W REPLACING FIRST "                       "
                                             BY "\CONTROL\SC-ARCHUSU.DAT".
@@ -383,7 +413,7 @@
                 INVALID KEY 
                         MOVE "SC-2"     TO MSJ1-HTML
                         MOVE "Placa no existe" TO MSJ2-HTML
-                        MOVE "TAX132-2" TO MSJ3-HTML
+                        MOVE "TAX132-3" TO MSJ3-HTML
                         GO TO ENVIAR2-ERROR
            END-READ
 
@@ -397,7 +427,7 @@
                 INVALID KEY
                         MOVE "SC-2"    TO MSJ1-HTML
                         MOVE "Propietario no existe!" TO MSJ2-HTML
-                        MOVE "TAX132-2" TO MSJ3-HTML
+                        MOVE "TAX132-3" TO MSJ3-HTML
                         GO TO ENVIAR2-ERROR
            END-READ
            CLOSE ARCHIVO-TERCEROS.
@@ -407,7 +437,7 @@
             OPEN INPUT ARCHIVO-INTER
             MOVE NUMERO-INT-W TO NUMERO-INT.
             START ARCHIVO-INTER KEY = NUMERO-INT
-                  INVALID KEY CONTINUE
+                  INVALID KEY PERFORM GRABAR-NUMERO
                   NOT INVALID KEY 
                           ADD 1 TO NUMERO-INT-W
                           GO TO GRABAR-INTER
@@ -427,9 +457,9 @@
            INITIALIZE MOV-DIARIO
            MOVE NUMERO-INT-W    TO COMPROB-MOV
            MOVE "1I"            TO LOTE-MOV
-           MOVE 0               TO ID-MOV
-           MOVE 00              TO COSTO-MOV
-           MOVE 0               TO SECU-MOV
+           MOVE ZEROS           TO ID-MOV
+           MOVE ZEROS           TO COSTO-MOV
+           MOVE ZEROS           TO SECU-MOV
            MOVE FECHA-COMP-W    TO FECHA-MOV
            MOVE FUNCTION CURRENT-DATE TO FECHA-ELAB-MOV.
 
@@ -444,9 +474,10 @@
            COMPUTE ID-MOV = 9900 + AGEN-INT-W.
 
            IF NIT-USU = 892002960
-              MOVE AGEN-INT-W  TO COSTO-MOV
+              MOVE AGEN-INT-W  TO C-COSTO-2
+              MOVE COSTO-EDIT  TO COSTO-MOV
            ELSE
-              MOVE 03        TO COSTO-MOV
+              MOVE 0003        TO COSTO-MOV
            END-IF.
 
            IF VR-DESCUADRE-T IS NOT ZERO
@@ -508,7 +539,7 @@
                COMPUTE ID-MOV = 9900 + AGEN-INT-W
                MOVE "41450520"   TO CUENTA-MOV
                MOVE AGEN-INT-W   TO AUXIL2-MOV
-               MOVE 03 TO COSTO-MOV
+               MOVE 0003 TO COSTO-MOV
 
                MOVE "REMESAS FFFFFFFF PARA EMPRESA" TO DETALLE-MOV
                INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
@@ -525,7 +556,7 @@
                  MOVE "26352500002" TO CUENTA-MOV
               END-IF
 
-              MOVE 00 TO COSTO-MOV
+              MOVE ZEROS TO COSTO-MOV
               MOVE "SEGURO RECAUDADO FFFFFFFF" TO DETALLE-MOV
               INSPECT DETALLE-MOV REPLACING FIRST "FFFFFFFF" BY FECHA-PLA-W
               COMPUTE VALOR-MOV ROUNDED = VLR-SEGUR-EMP * -1
@@ -536,9 +567,10 @@
             COMPUTE ID-MOV = 9900 + AGEN-INT-W.
 
             IF NIT-USU = 892002960
-               MOVE AGEN-INT-W  TO COSTO-MOV
+               MOVE AGEN-INT-W  TO C-COSTO-2
+               MOVE COSTO-EDIT  TO COSTO-MOV
             ELSE
-               MOVE 03          TO COSTO-MOV
+               MOVE 0003        TO COSTO-MOV
             END-IF.
 
             IF (NIT-USU = 892000113 AND AGEN-INT-W = 03)
@@ -583,7 +615,7 @@
 000590	   CALL "COBW3_SET_CNV"  USING COBW3
 
 010720     MOVE "programa-id" TO COBW3-CNV-NAME
-010730     MOVE "TAX132-2"    TO COBW3-CNV-VALUE
+010730     MOVE "TAX132-3"    TO COBW3-CNV-VALUE
 010740     CALL "COBW3_SET_CNV" USING COBW3
 
 010760     MOVE "..\PAGINAS\RECIBIDOSPLANO.ASPX" TO SALIDA-HTML
@@ -743,6 +775,31 @@
               PERFORM EDITAR-SECUENCIA
               WRITE MOV-DIARIO END-WRITE
            END-IF.
+
+       GRABAR-NUMERO.
+
+           INITIALIZE INVALID-007 DATO-ULT-MOV-LNK
+
+           EVALUATE PREFIJO-USU
+               WHEN 01    MOVE "1I" TO LOTE-ULT-MOV-LNK
+               WHEN 02    MOVE "2I" TO LOTE-ULT-MOV-LNK
+               WHEN 03    MOVE "3I" TO LOTE-ULT-MOV-LNK
+               WHEN OTHER MOVE "1I" TO LOTE-ULT-MOV-LNK
+           END-EVALUATE
+
+
+           MOVE FECHA-COMP-W  TO FECHA-ULT-MOV-LNK
+           MOVE NUMERO-INT-W  TO NRO2-ULT-COMP-LNK.
+
+           CALL "CON007X" USING NOMBRE-LNK DIRECTORIO-W INVALID-007 MENSAJE-W DATO-ULT-MOV-LNK.
+
+           IF INVALID-007 > 0
+              MOVE INVALID-007             TO MSJ1-HTML
+              MOVE MENSAJE-W TO MSJ2-HTML
+              MOVE DIRECTORIO-W            TO MSJ3-HTML
+              GO TO ENVIAR2-ERROR
+           END-IF.
+
 
        LLENAR-TABLA.
            INITIALIZE LINEA-TABLA-LLEGAG-W PORCE-EMPRESA-EDIT
